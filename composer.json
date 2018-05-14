@@ -1,0 +1,25 @@
+{
+    "name": "needle-project/laravel-rabbitmq",
+    "description": "Simple rabbitmq integration for Laravel",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Adrian Tilita",
+            "email": "adrian@tilita.ro",
+            "role": "Developer"
+        }
+    ],
+    "require": {
+        "php": "7.*",
+	"php-amqplib/php-amqplib": "2.7.*"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "7.*|6.*",
+        "squizlabs/php_codesniffer": "2.*",
+        "phpmd/phpmd" : "@stable"
+    },
+    "autoload": {
+        "psr-4": {"NeedleProject\\LaravelRabbitMq\\": "src/"}
+    },
+    "minimum-stability": "stable"
+}
