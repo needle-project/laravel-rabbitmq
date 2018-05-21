@@ -11,15 +11,17 @@
     ],
     "require": {
         "php": "7.*",
-	"php-amqplib/php-amqplib": "2.7.*"
+	    "php-amqplib/php-amqplib": "2.7.*"
     },
     "require-dev": {
         "phpunit/phpunit": "7.*|6.*",
         "squizlabs/php_codesniffer": "2.*",
-        "phpmd/phpmd" : "@stable"
+        "phpmd/phpmd" : "@stable",
+        "laravel/framework": "5.5.*"
     },
     "autoload": {
         "psr-4": {"NeedleProject\\LaravelRabbitMq\\": "src/"}
     },
-    "minimum-stability": "stable"
+    "minimum-stability": "dev",
+    "prefer-stable": true
 }
