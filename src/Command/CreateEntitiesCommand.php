@@ -3,7 +3,9 @@ namespace NeedleProject\LaravelRabbitMq\Command;
 
 use Illuminate\Console\Command;
 use NeedleProject\LaravelRabbitMq\Container;
+use NeedleProject\LaravelRabbitMq\Entity\AbstractAMQPEntity;
 use NeedleProject\LaravelRabbitMq\Entity\AbstractEntity;
+use NeedleProject\LaravelRabbitMq\Publisher\PublisherInterface;
 
 /**
  * Class CreateEntitiesCommand
@@ -50,9 +52,10 @@ class CreateEntitiesCommand extends Command
     public function handle()
     {
         $hasErrors = false;
-        /** @var AbstractEntity $entity */
-        foreach ($this->container->getPublishers() as $publisherName => $entity) {
+        /** @var PublisherInterface $entity */
+        foreach ($this->container->getPublishers() as $publisherName => $publisher) {
             try {
+                $entity = $publisher->getEntity();
                 $entity->create();
                 $this->output->writeln(
                     sprintf(

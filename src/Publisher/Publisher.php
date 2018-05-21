@@ -28,7 +28,7 @@ class Publisher implements PublisherInterface
     /**
      * @return AbstractAMQPEntity
      */
-    protected function getEntity(): AbstractAMQPEntity
+    public function getEntity(): AbstractAMQPEntity
     {
         return $this->entity;
     }
