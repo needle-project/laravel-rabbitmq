@@ -32,7 +32,7 @@ abstract class AbstractAMQPEntity
         $this->connection = $connection;
         $this->name       = $name;
         $this->attributes = array_merge(
-            $this->attributes,
+            $this->getDefaultAttributes(),
             $attributes
         );
     }

@@ -41,14 +41,20 @@ class ExchangeEntity extends AbstractAMQPEntity
                 $this->attributes['internal'],
                 $this->attributes['nowait']
             );
+    }
+
+    public function bind()
+    {
         if (isset($this->attributes['bind'])) {
-            $this->getConnection()
-                ->getChannel()
-                ->queue_bind(
-                    $this->attributes['bind']['queue'],
-                    $this->getName(),
-                    $this->attributes['bind']['routing_key']
-                );
+            foreach ($this->attributes['bind'] as $bindItem) {
+                $this->getConnection()
+                    ->getChannel()
+                    ->queue_bind(
+                        $bindItem['queue'],
+                        $this->getName(),
+                        $bindItem['routing_key']
+                    );
+            }
         }
     }
 

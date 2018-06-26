@@ -42,6 +42,7 @@ class ContainerBuilder
              $messageProcessor = $consumerDetails['message_processor'];
 
              $consumer = new Consumer(
+                 $consumerAliasName,
                  $entities->get($consumerDetails['queue']),
                  app($messageProcessor),
                  $prefetchCount

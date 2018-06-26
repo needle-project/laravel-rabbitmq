@@ -5,7 +5,8 @@ use Illuminate\Foundation\Application;
 use Illuminate\Support\ServiceProvider as LaravelServiceProvider;
 use NeedleProject\LaravelRabbitMq\Builder\ContainerBuilder;
 use NeedleProject\LaravelRabbitMq\Command\BaseConsumerCommand;
-use NeedleProject\LaravelRabbitMq\Command\CreateEntitiesCommand;
+use NeedleProject\LaravelRabbitMq\Command\DeleteAllCommand;
+use NeedleProject\LaravelRabbitMq\Command\SetupCommand;
 use NeedleProject\LaravelRabbitMq\Command\ListEntitiesCommand;
 use NeedleProject\LaravelRabbitMq\Consumer\ConsumerInterface;
 use NeedleProject\LaravelRabbitMq\Container;
@@ -35,7 +36,6 @@ class ServiceProvider extends LaravelServiceProvider
      */
     public function boot()
     {
-
         $config = config('laravel_rabbitmq');
 
         $this->app->singleton(Container::class, function () use ($config) {
@@ -62,13 +62,18 @@ class ServiceProvider extends LaravelServiceProvider
                 throw new \RuntimeException("Cannot make Consumer. No consumer identifier provided!");
             }
             $aliasName = $arguments[0];
+
+            if (!$container->hasConsumer($aliasName)) {
+                throw new \RuntimeException("Cannot make Consumer.\nNo consumer with alias name {$aliasName} found!");
+            }
             return $container->getConsumer($aliasName);
         });
 
         $this->commands([
-            CreateEntitiesCommand::class,
+            SetupCommand::class,
             ListEntitiesCommand::class,
-            BaseConsumerCommand::class
+            BaseConsumerCommand::class,
+            DeleteAllCommand::class
         ]);
     }
 }

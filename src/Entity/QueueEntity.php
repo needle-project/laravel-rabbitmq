@@ -39,14 +39,20 @@ class QueueEntity extends AbstractAMQPEntity
                 $this->attributes['internal'],
                 $this->attributes['nowait']
             );
+    }
+
+    public function bind()
+    {
         if (isset($this->attributes['bind'])) {
-            $this->getConnection()
-                ->getChannel()
-                ->queue_bind(
-                    $this->getName(),
-                    $this->attributes['bind']['exchange'],
-                    $this->attributes['bind']['routing_key']
-                );
+            foreach ($this->attributes['bind'] as $bindItem) {
+                $this->getConnection()
+                    ->getChannel()
+                    ->queue_bind(
+                        $this->getName(),
+                        $bindItem['exchange'],
+                        $bindItem['routing_key']
+                    );
+            }
         }
     }
 

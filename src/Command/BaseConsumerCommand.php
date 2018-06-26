@@ -2,11 +2,7 @@
 namespace NeedleProject\LaravelRabbitMq\Command;
 
 use Illuminate\Console\Command;
-use NeedleProject\LaravelRabbitMq\Consumer\BasicProcessor;
 use NeedleProject\LaravelRabbitMq\Consumer\ConsumerInterface;
-use NeedleProject\LaravelRabbitMq\Entity\AMQPQueueEntity;
-use NeedleProject\LaravelRabbitMq\Entity\EntityCollection;
-use NeedleProject\LaravelRabbitMq\Producer\ProducerCollection;
 
 /**
  * Class BaseConsumerCommand

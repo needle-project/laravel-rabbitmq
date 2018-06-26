@@ -30,21 +30,24 @@ class Consumer implements ConsumerInterface
      * @param string $aliasName
      * @param AbstractAMQPEntity $entity
      * @param AbstractMessageProcessor $processor
+     * @param int $prefetchCount
      */
     public function __construct(
         string $aliasName,
         AbstractAMQPEntity $entity,
-        AbstractMessageProcessor $processor
+        AbstractMessageProcessor $processor,
+        int $prefetchCount = 1
     ) {
         $this->aliasName = $aliasName;
         $this->processor = $processor;
         $this->entity = $entity;
+        $this->prefetchCount = $prefetchCount;
     }
 
     /**
      * @return AbstractAMQPEntity
      */
-    protected function getEntity(): AbstractAMQPEntity
+    public function getEntity(): AbstractAMQPEntity
     {
         return $this->entity;
     }

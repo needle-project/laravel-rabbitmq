@@ -2,33 +2,33 @@
 namespace NeedleProject\LaravelRabbitMq\Command;
 
 use Illuminate\Console\Command;
+use NeedleProject\LaravelRabbitMq\Consumer\ConsumerInterface;
 use NeedleProject\LaravelRabbitMq\Container;
-use NeedleProject\LaravelRabbitMq\Entity\AbstractAMQPEntity;
-use NeedleProject\LaravelRabbitMq\Entity\AbstractEntity;
+use NeedleProject\LaravelRabbitMq\Entity\QueueEntity;
 use NeedleProject\LaravelRabbitMq\Publisher\PublisherInterface;
 
 /**
- * Class CreateEntitiesCommand
+ * Class DeleteAllCommand
  *
  * @package NeedleProject\LaravelRabbitMq\Commad
  * @author  Adrian Tilita <adrian@tilita.ro>
  */
-class CreateEntitiesCommand extends Command
+class DeleteAllCommand extends Command
 {
     /**
      * The name and signature of the console command.
      *
      * @var string
      */
-    protected $signature = 'rabbitmq:setup';
+    protected $signature = 'rabbitmq:delete-all';
 
     /**
      * The console command description.
      *
      * @var string
      */
-    protected $description = 'Create all queues, exchanges and binds that are defined in entities AND referenced to' .
-        ' either a publisher or a consumer';
+    protected $description = 'Delete all queues, exchanges and binds that are defined in entities AND referenced to' .
+    ' either a publisher or a consumer';
 
     /**
      * @var Container
@@ -56,10 +56,10 @@ class CreateEntitiesCommand extends Command
         foreach ($this->container->getPublishers() as $publisherName => $publisher) {
             try {
                 $entity = $publisher->getEntity();
-                $entity->create();
+                $entity->delete();
                 $this->output->writeln(
                     sprintf(
-                        "Created entity <info>%s</info> for publisher [<fg=yellow>%s</>]",
+                        "Deleted entity <info>%s</info> for publisher [<fg=yellow>%s</>]",
                         (string)$entity->getName(),
                         (string)$publisherName
                     )
@@ -68,9 +68,35 @@ class CreateEntitiesCommand extends Command
                 $hasErrors = true;
                 $this->output->error(
                     sprintf(
-                        "Could not create entity %s for publisher [%s], got:\n%s",
+                        "Could not delete entity %s for publisher [%s], got:\n%s",
                         (string)$entity->getName(),
                         (string)$publisherName,
+                        (string)$e->getMessage()
+                    )
+                );
+            }
+        }
+
+        /** @var ConsumerInterface $entity */
+        foreach ($this->container->getConsumers() as $consumerAliasName => $consumer) {
+            try {
+                /** @var QueueEntity $entity */
+                $entity = $consumer->getEntity();
+                $entity->delete();
+                $this->output->writeln(
+                    sprintf(
+                        "Deleted entity <info>%s</info> for consumer [<fg=yellow>%s</>]",
+                        (string)$entity->getName(),
+                        (string)$consumerAliasName
+                    )
+                );
+            } catch (\Exception $e) {
+                $hasErrors = true;
+                $this->output->error(
+                    sprintf(
+                        "Could not delete entity %s for consumer [%s], got:\n%s",
+                        (string)$entity->getName(),
+                        (string)$consumerAliasName,
                         (string)$e->getMessage()
                     )
                 );

@@ -51,6 +51,15 @@ class Container
     }
 
     /**
+     * @param string $publisherName
+     * @return bool
+     */
+    public function hasPublisher(string $publisherName): bool
+    {
+        return isset($this->publishers[$publisherName]);
+    }
+
+    /**
      * @param string $consumerName
      * @param ConsumerInterface $consumer
      * @return Container
@@ -76,5 +85,14 @@ class Container
     public function getConsumers(): array
     {
         return $this->consumers;
+    }
+
+    /**
+     * @param string $consumerName
+     * @return bool
+     */
+    public function hasConsumer(string $consumerName): bool
+    {
+        return isset($this->consumers[$consumerName]);
     }
 }
