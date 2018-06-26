@@ -16,7 +16,7 @@ class BaseConsumerCommand extends Command
      *
      * @var string
      */
-    protected $signature = 'rabbitmq:consume {consumer}';
+    protected $signature = 'rabbitmq:consume {consumer} {messageCount?}';
 
     /**
      * The console command description.
@@ -31,7 +31,9 @@ class BaseConsumerCommand extends Command
      */
     private function getConsumer(string $consumerAliasName): ConsumerInterface
     {
-        return app()->makeWith(ConsumerInterface::class, [$consumerAliasName]);
+        return app()->makeWith(
+            ConsumerInterface::class, [$consumerAliasName]
+        );
     }
 
     /**
