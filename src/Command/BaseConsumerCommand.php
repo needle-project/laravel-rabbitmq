@@ -16,7 +16,7 @@ class BaseConsumerCommand extends Command
      *
      * @var string
      */
-    protected $signature = 'rabbitmq:consume {consumer} {messageCount?}';
+    protected $signature = 'rabbitmq:consume {consumer}';
 
     /**
      * The console command description.
