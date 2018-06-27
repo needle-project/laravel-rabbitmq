@@ -3,7 +3,7 @@ namespace NeedleProject\LaravelRabbitMq\Processor;
 
 use PhpAmqpLib\Message\AMQPMessage;
 
-abstract class AbstractMessageProcessor
+abstract class AbstractMessageProcessor implements MessageProcessorInterface
 {
     private $messageCount = 0;
 

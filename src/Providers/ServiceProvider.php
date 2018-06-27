@@ -37,11 +37,13 @@ class ServiceProvider extends LaravelServiceProvider
     public function boot()
     {
         $config = config('laravel_rabbitmq');
-
-        $this->app->singleton(Container::class, function () use ($config) {
-            $container = new ContainerBuilder();
-            return $container->createContainer($config);
-        });
+        $this->app->singleton(
+            Container::class,
+            function () use ($config) {
+                $container = new ContainerBuilder();
+                return $container->createContainer($config);
+            }
+        );
 
         // Get "tagged" like Publisher
         $this->app->singleton(PublisherInterface::class, function (Application $application, $arguments) {

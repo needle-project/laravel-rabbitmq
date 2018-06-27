@@ -3,6 +3,7 @@ namespace NeedleProject\LaravelRabbitMq\Consumer;
 
 use NeedleProject\LaravelRabbitMq\Entity\AbstractAMQPEntity;
 use NeedleProject\LaravelRabbitMq\Processor\AbstractMessageProcessor;
+use PhpAmqpLib\Message\AMQPMessage;
 
 class Consumer implements ConsumerInterface
 {
@@ -35,7 +36,7 @@ class Consumer implements ConsumerInterface
     public function __construct(
         string $aliasName,
         AbstractAMQPEntity $entity,
-        AbstractMessageProcessor $processor,
+        string $processor,
         int $prefetchCount = 1
     ) {
         $this->aliasName = $aliasName;
@@ -100,9 +101,28 @@ class Consumer implements ConsumerInterface
                 false,
                 false,
                 [
-                    $this->processor,
+                    $this,
                     'consume'
                 ]
             );
+    }
+
+    /**
+     * @return AbstractMessageProcessor
+     */
+    private function getMessageProcessor()
+    {
+        if (!($this->processor instanceof AbstractMessageProcessor)) {
+            $this->processor = app($this->processor);
+        }
+        return $this->processor;
+    }
+
+    /**
+     * @param AMQPMessage $message
+     */
+    public function consume(AMQPMessage $message)
+    {
+        $this->getMessageProcessor()->consume($message);
     }
 }

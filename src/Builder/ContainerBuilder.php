@@ -44,7 +44,7 @@ class ContainerBuilder
              $consumer = new Consumer(
                  $consumerAliasName,
                  $entities->get($consumerDetails['queue']),
-                 app($messageProcessor),
+                 $messageProcessor,
                  $prefetchCount
              );
              $container->addConsumer($consumerAliasName, $consumer);
