@@ -3,6 +3,7 @@ namespace NeedleProject\LaravelRabbitMq\Consumer;
 
 use NeedleProject\LaravelRabbitMq\Entity\AbstractAMQPEntity;
 use NeedleProject\LaravelRabbitMq\Processor\AbstractMessageProcessor;
+use PhpAmqpLib\Exception\AMQPTimeoutException;
 use PhpAmqpLib\Message\AMQPMessage;
 
 class Consumer implements ConsumerInterface
@@ -65,9 +66,11 @@ class Consumer implements ConsumerInterface
                     ->getConnection()
                     ->getChannel()
                     ->wait();
+            } catch (AMQPTimeoutException $e) {
+                usleep(1000);
+                $this->getEntity()->getConnection()->reconnect();
             } catch (\Throwable $e) {
-                dump(get_class($e));
-                dump($e->getMessage());
+                return 1;
             }
         }
     }

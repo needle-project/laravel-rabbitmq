@@ -11,7 +11,7 @@ use NeedleProject\LaravelRabbitMq\Command\ListEntitiesCommand;
 use NeedleProject\LaravelRabbitMq\Consumer\ConsumerInterface;
 use NeedleProject\LaravelRabbitMq\Container;
 use NeedleProject\LaravelRabbitMq\Exception\LaravelRabbitMqException;
-use NeedleProject\LaravelRabbitMq\Publisher\PublisherInterface;
+use NeedleProject\LaravelRabbitMq\PublisherInterface;
 
 /**
  * Class ServiceProvider

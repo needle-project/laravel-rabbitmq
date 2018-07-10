@@ -1,5 +1,5 @@
 <?php
-namespace NeedleProject\LaravelRabbitMq\Publisher;
+namespace NeedleProject\LaravelRabbitMq;
 
 /**
  * Interface PublisherInterface
@@ -9,23 +9,6 @@ namespace NeedleProject\LaravelRabbitMq\Publisher;
  */
 interface PublisherInterface
 {
-    /**
-     * Switch the publisher in transaction mode
-     * @return mixed
-     */
-    public function startTransaction();
-
-    /**
-     * Commit transaction
-     * @return mixed
-     */
-    public function commit();
-
-    /**
-     * RollBack a transaction
-     */
-    public function rollBack();
-
     /**
      * Publish a new message
      *

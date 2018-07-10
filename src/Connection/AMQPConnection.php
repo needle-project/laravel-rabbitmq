@@ -25,7 +25,6 @@ class AMQPConnection
         'lazy'               => true,
 
         # More info about timeouts can be found on https://www.rabbitmq.com/networking.html
-        'read_timeout'       => 1,   // default timeout in seconds
         'read_write_timeout' => 8,   // default timeout for writing/reading (in seconds)
         'connect_timeout'    => 10,
         'heartbeat'          => 4
@@ -34,12 +33,12 @@ class AMQPConnection
     /**
      * @var array
      */
-    private $connectionDetails = [];
+    protected $connectionDetails = [];
 
     /**
      * @var string
      */
-    private $aliasName = '';
+    protected $aliasName = '';
 
     /**
      * @var null|AMQPStreamConnection
@@ -52,6 +51,29 @@ class AMQPConnection
     private $channel = null;
 
     /**
+     * @param string $aliasName
+     * @param array $connectionDetails
+     * @return AMQPConnection
+     */
+    public static function createConnection(string $aliasName, array $connectionDetails)
+    {
+        if ($diff = array_diff(array_keys($connectionDetails), array_keys(self::DEFAULTS))) {
+            throw new \InvalidArgumentException(
+                sprintf(
+                    "Cannot create connection %s, received unknown arguments: %s!",
+                    (string)$aliasName,
+                    implode(', ', $diff)
+                )
+            );
+        }
+
+        return new static(
+            $aliasName,
+            array_merge(self::DEFAULTS, $connectionDetails)
+        );
+    }
+
+    /**
      * AMQPConnection constructor.
      *
      * @param string $aliasName
@@ -59,11 +81,12 @@ class AMQPConnection
      */
     public function __construct(string $aliasName, array $connectionDetails = [])
     {
-        $this->connectionDetails = array_merge(
-            static::DEFAULTS,
-            $connectionDetails
-        );
         $this->aliasName = $aliasName;
+        $this->connectionDetails = $connectionDetails;
+        if ($connectionDetails['lazy'] === false) {
+            // dummy call
+            $this->getConnection();
+        }
     }
 
     /**
@@ -97,6 +120,16 @@ class AMQPConnection
     }
 
     /**
+     * Reconnect
+     */
+    public function reconnect()
+    {
+        $this->getConnection()->channel()->close();
+        $this->channel = null;
+        $this->getConnection()->reconnect();
+    }
+
+    /**
      * @return \PhpAmqpLib\Channel\AMQPChannel
      */
     public function getChannel()
@@ -112,7 +145,7 @@ class AMQPConnection
      *
      * @return string
      */
-    public function getName(): string
+    public function getAliasName(): string
     {
         return $this->aliasName;
     }

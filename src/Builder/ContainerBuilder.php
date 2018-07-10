@@ -6,6 +6,8 @@ use NeedleProject\LaravelRabbitMq\Connection\AMQPConnection;
 use NeedleProject\LaravelRabbitMq\Consumer\Consumer;
 use NeedleProject\LaravelRabbitMq\Container;
 use NeedleProject\LaravelRabbitMq\Entity\EntityFactory;
+use NeedleProject\LaravelRabbitMq\Entity\ExchangeEntity;
+use NeedleProject\LaravelRabbitMq\Entity\QueueEntity;
 use NeedleProject\LaravelRabbitMq\Publisher\Publisher;
 
 /**
@@ -26,14 +28,29 @@ class ContainerBuilder
     public function createContainer(array $config)
     {
         $connections = $this->createConnections($config['connections']);
-        $entities    = $this->createEntities($config['entities'], $connections);
+        $exchanges = $this->createExchanges($config['exchanges'], $connections);
+        $queues = $this->createQueues($config['queues'], $connections);
 
         $container = new Container();
         // create publishers
         foreach ($config['publishers'] as $publisherAliasName => $publisherEntityBind) {
+            if ($exchanges->has($publisherEntityBind)) {
+                $entity = $exchanges->get($publisherEntityBind);
+            } elseif ($queues->has($publisherEntityBind)) {
+                $entity = $queues->get($publisherEntityBind);
+            } else {
+                throw new \RuntimeException(
+                    sprintf(
+                        "Cannot create publisher %s: no exchange or queue named %s is defined!",
+                        (string)$publisherAliasName,
+                        (string)$publisherEntityBind
+                    )
+                );
+            }
+
             $container->addPublisher(
                 $publisherAliasName,
-                new Publisher($entities->get($publisherEntityBind))
+                $entity
             );
         }
 
@@ -56,7 +73,6 @@ class ContainerBuilder
     /**
      * Create connections
      *
-     * @todo    Inject config validator
      * @param array $connectionConfig
      * @return Collection
      */
@@ -66,23 +82,75 @@ class ContainerBuilder
         foreach ($connectionConfig as $connectionAliasName => $connectionCredentials) {
             $connections->put(
                 $connectionAliasName,
-                new AMQPConnection($connectionAliasName, $connectionCredentials)
+                AMQPConnection::createConnection($connectionAliasName, $connectionCredentials)
             );
         }
         return $connections;
     }
 
-    private function createEntities(array $entitiesConfig, Collection $connections): Collection
+    /**
+     * @param array $exchangeConfigList
+     * @param Collection $connections
+     * @return Collection
+     */
+    private function createExchanges(array $exchangeConfigList, Collection $connections): Collection
     {
-        $entities = new Collection();
-        foreach ($entitiesConfig as $entityAliasName => $entityDetails) {
-            $entities[$entityAliasName] = EntityFactory::createEntity(
-                $connections->get($entityDetails['connection']),
-                $entityDetails['name'],
-                $entityDetails['type'],
-                $entityDetails['attributes']
+        $exchanges = new Collection();
+        foreach ($exchangeConfigList as $exchangeAliasName => $exchangeDetails) {
+            // verify if the connection exists
+            if (array_key_exists('connection', $exchangeDetails) &&
+                false === $connections->has($exchangeDetails['connection'])) {
+                throw new \RuntimeException(
+                    sprintf(
+                        "Could not create exchange %s: connection name %s is not defined!",
+                        (string)$exchangeAliasName,
+                        (string)$exchangeDetails['connection']
+                    )
+                );
+            }
+
+            $exchanges->put(
+                $exchangeAliasName,
+                ExchangeEntity::createExchange(
+                    $connections->get($exchangeDetails['connection']),
+                    $exchangeAliasName,
+                    $exchangeDetails
+                )
             );
         }
-        return $entities;
+        return $exchanges;
+    }
+
+    /**
+     * @param array $queueConfigList
+     * @param Collection $connections
+     * @return Collection
+     */
+    private function createQueues(array $queueConfigList, Collection $connections): Collection
+    {
+        $queue = new Collection();
+        foreach ($queueConfigList as $queueAliasName => $queueDetails) {
+            // verify if the connection exists
+            if (array_key_exists('connection', $queueDetails) &&
+                false === $connections->has($queueDetails['connection'])) {
+                throw new \RuntimeException(
+                    sprintf(
+                        "Could not create exchange %s: connection name %s is not defined!",
+                        (string)$queueAliasName,
+                        (string)$queueDetails['connection']
+                    )
+                );
+            }
+
+            $queue->put(
+                $queueAliasName,
+                QueueEntity::createQueue(
+                    $connections->get($queueDetails['connection']),
+                    $queueAliasName,
+                    $queueDetails
+                )
+            );
+        }
+        return $queue;
     }
 }

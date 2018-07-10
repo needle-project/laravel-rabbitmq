@@ -4,6 +4,7 @@ namespace NeedleProject\LaravelRabbitMq\Command;
 use Illuminate\Console\Command;
 use NeedleProject\LaravelRabbitMq\Consumer\ConsumerInterface;
 use NeedleProject\LaravelRabbitMq\Container;
+use NeedleProject\LaravelRabbitMq\Entity\ExchangeEntity;
 use NeedleProject\LaravelRabbitMq\Entity\QueueEntity;
 use NeedleProject\LaravelRabbitMq\Publisher\PublisherInterface;
 
@@ -52,15 +53,14 @@ class SetupCommand extends Command
     public function handle()
     {
         $hasErrors = false;
-        /** @var PublisherInterface $entity */
+        /** @var QueueEntity|ExchangeEntity $entity */
         foreach ($this->container->getPublishers() as $publisherName => $publisher) {
             try {
-                $entity = $publisher->getEntity();
                 $entity->create();
                 $this->output->writeln(
                     sprintf(
                         "Created entity <info>%s</info> for publisher [<fg=yellow>%s</>]",
-                        (string)$entity->getName(),
+                        (string)$entity->getAliasName(),
                         (string)$publisherName
                     )
                 );
@@ -69,7 +69,7 @@ class SetupCommand extends Command
                 $this->output->error(
                     sprintf(
                         "Could not create entity %s for publisher [%s], got:\n%s",
-                        (string)$entity->getName(),
+                        (string)$entity->getAliasName(),
                         (string)$publisherName,
                         (string)$e->getMessage()
                     )
@@ -81,12 +81,11 @@ class SetupCommand extends Command
         foreach ($this->container->getConsumers() as $consumerAliasName => $consumer) {
             try {
                 /** @var QueueEntity $entity */
-                $entity = $consumer->getEntity();
                 $entity->create();
                 $this->output->writeln(
                     sprintf(
                         "Created entity <info>%s</info> for consumer [<fg=yellow>%s</>]",
-                        (string)$entity->getName(),
+                        (string)$entity->getAliasName(),
                         (string)$consumerAliasName
                     )
                 );
@@ -95,7 +94,7 @@ class SetupCommand extends Command
                 $this->output->error(
                     sprintf(
                         "Could not create entity %s for consumer [%s], got:\n%s",
-                        (string)$entity->getName(),
+                        (string)$entity->getAliasName(),
                         (string)$consumerAliasName,
                         (string)$e->getMessage()
                     )

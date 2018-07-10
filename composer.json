@@ -22,6 +22,9 @@
     "autoload": {
         "psr-4": {"NeedleProject\\LaravelRabbitMq\\": "src/"}
     },
+    "autoload-dev": {
+        "psr-4": { "Tests\\NeedleProject\\LaravelRabbitMq\\": "tests/" }
+    },
     "minimum-stability": "dev",
     "prefer-stable": true
 }
