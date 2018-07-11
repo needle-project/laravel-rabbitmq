@@ -70,6 +70,11 @@ class QueueEntity implements PublisherInterface, ConsumerInterface
     private $limitMemoryConsumption;
 
     /**
+     * @var int
+     */
+    private $startTime = 0;
+
+    /**
      * @param AMQPConnection $connection
      * @param string $aliasName
      * @param array $exchangeDetails
@@ -213,7 +218,7 @@ class QueueEntity implements PublisherInterface, ConsumerInterface
         $this->setupConsumer($messages, $seconds, $maxMemory);
         while (false === $this->shouldStopConsuming()) {
             try {
-                $this->getChannel()->wait();
+                $this->getChannel()->wait(null, false, $seconds);
             } catch (AMQPTimeoutException $e) {
                 usleep(1000);
                 $this->getConnection()->reconnect();
@@ -229,6 +234,31 @@ class QueueEntity implements PublisherInterface, ConsumerInterface
      */
     protected function shouldStopConsuming(): bool
     {
+        if ((microtime(true) - $this->startTime) > $this->limitSecondsUptime) {
+            $this->log("Stopped! Timeout reached");
+            return true;
+        }
+        // memory_get_peak_usage(true) >= ($this->limitMemoryConsumption / 1048576)
+
+        if (memory_get_peak_usage(true) >= ($this->limitMemoryConsumption * 1048576)) {
+            $this->log(
+                sprintf(
+                    "Stopped! Memory consumption reached %d MB",
+                    (int)round(memory_get_peak_usage(true) / 1048576, 2)
+                )
+            );
+            return true;
+        }
+
+        if ($this->getMessageProcessor()->getProcessedMessages() >= $this->limitMessageCount) {
+            $this->log(
+                sprintf(
+                    "Stopped! %d total messages consumed!",
+                    (int)$this->getMessageProcessor()->getProcessedMessages()
+                )
+            );
+            return true;
+        }
         return false;
     }
 
@@ -244,6 +274,8 @@ class QueueEntity implements PublisherInterface, ConsumerInterface
         $this->limitMessageCount = $messages;
         $this->limitSecondsUptime = $seconds;
         $this->limitMemoryConsumption = $maxMemory;
+
+        $this->startTime = microtime(true);
 
         $this->getChannel()
             ->basic_qos(null, $this->prefetchCount, true);
@@ -279,6 +311,15 @@ class QueueEntity implements PublisherInterface, ConsumerInterface
      */
     public function consume(AMQPMessage $message)
     {
+        $this->log("Received: " . $message->getBody());
         $this->getMessageProcessor()->consume($message);
+    }
+
+    /**
+     * @param string $message
+     */
+    private function log(string $message)
+    {
+        // do nothing at the moment
     }
 }

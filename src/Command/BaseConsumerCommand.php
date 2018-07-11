@@ -16,7 +16,7 @@ class BaseConsumerCommand extends Command
      *
      * @var string
      */
-    protected $signature = 'rabbitmq:consume {consumer}';
+    protected $signature = 'rabbitmq:consume {consumer} {--time=600} {--messages=100} {--memory=128}';
 
     /**
      * The console command description.
@@ -39,8 +39,12 @@ class BaseConsumerCommand extends Command
      */
     public function handle()
     {
+        $messageCount = $this->input->getOption('messages');
+        $waitTime = $this->input->getOption('time');
+        $memoryLimit = $this->input->getOption('memory');
+
         /** @var ConsumerInterface $consumer */
         $consumer = $this->getConsumer($this->input->getArgument('consumer'));
-        $consumer->startConsuming();
+        $consumer->startConsuming($messageCount, $waitTime, $memoryLimit);
     }
 }
