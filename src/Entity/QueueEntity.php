@@ -2,7 +2,7 @@
 namespace NeedleProject\LaravelRabbitMq\Entity;
 
 use NeedleProject\LaravelRabbitMq\Connection\AMQPConnection;
-use NeedleProject\LaravelRabbitMq\Consumer\ConsumerInterface;
+use NeedleProject\LaravelRabbitMq\ConsumerInterface;
 use NeedleProject\LaravelRabbitMq\Processor\MessageProcessorInterface;
 use NeedleProject\LaravelRabbitMq\PublisherInterface;
 use PhpAmqpLib\Channel\AMQPChannel;
@@ -55,6 +55,21 @@ class QueueEntity implements PublisherInterface, ConsumerInterface
     private $messageProcessor = null;
 
     /**
+     * @var int
+     */
+    private $limitMessageCount;
+
+    /**
+     * @var int
+     */
+    private $limitSecondsUptime;
+
+    /**
+     * @var int
+     */
+    private $limitMemoryConsumption;
+
+    /**
      * @param AMQPConnection $connection
      * @param string $aliasName
      * @param array $exchangeDetails
@@ -67,6 +82,14 @@ class QueueEntity implements PublisherInterface, ConsumerInterface
             $aliasName,
             array_merge(self::DEFAULTS, $exchangeDetails)
         );
+    }
+
+    /**
+     * @return string
+     */
+    public function getAliasName(): string
+    {
+        return $this->aliasName;
     }
 
     /**
@@ -94,10 +117,10 @@ class QueueEntity implements PublisherInterface, ConsumerInterface
     }
 
     /**
-     * @param MessageProcessorInterface $messageProcessor
+     * @param string $messageProcessor
      * @return ConsumerInterface
      */
-    public function setMessageProcessor(MessageProcessorInterface $messageProcessor): ConsumerInterface
+    public function setMessageProcessor(string $messageProcessor): ConsumerInterface
     {
         $this->messageProcessor = $messageProcessor;
         return $this;
@@ -178,15 +201,19 @@ class QueueEntity implements PublisherInterface, ConsumerInterface
     }
 
     /**
-     * Start consuming messages
+     * {@inheritdoc}
+     *
+     * @param int $messages
+     * @param int $seconds
+     * @param int $maxMemory
+     * @return int
      */
-    public function startConsuming()
+    public function startConsuming(int $messages, int $seconds, int $maxMemory)
     {
-        $this->setupConsumer();
+        $this->setupConsumer($messages, $seconds, $maxMemory);
         while (false === $this->shouldStopConsuming()) {
             try {
-                $this->getChannel()
-                    ->wait();
+                $this->getChannel()->wait();
             } catch (AMQPTimeoutException $e) {
                 usleep(1000);
                 $this->getConnection()->reconnect();
@@ -194,6 +221,7 @@ class QueueEntity implements PublisherInterface, ConsumerInterface
                 return 1;
             }
         }
+        return 0;
     }
 
     /**
@@ -206,9 +234,17 @@ class QueueEntity implements PublisherInterface, ConsumerInterface
 
     /**
      * Setup the consumer
+     *
+     * @param int $messages
+     * @param int $seconds
+     * @param int $maxMemory
      */
-    protected function setupConsumer()
+    protected function setupConsumer(int $messages, int $seconds, int $maxMemory)
     {
+        $this->limitMessageCount = $messages;
+        $this->limitSecondsUptime = $seconds;
+        $this->limitMemoryConsumption = $maxMemory;
+
         $this->getChannel()
             ->basic_qos(null, $this->prefetchCount, true);
 

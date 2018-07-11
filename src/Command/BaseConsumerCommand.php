@@ -2,7 +2,7 @@
 namespace NeedleProject\LaravelRabbitMq\Command;
 
 use Illuminate\Console\Command;
-use NeedleProject\LaravelRabbitMq\Consumer\ConsumerInterface;
+use NeedleProject\LaravelRabbitMq\ConsumerInterface;
 
 /**
  * Class BaseConsumerCommand
@@ -31,9 +31,7 @@ class BaseConsumerCommand extends Command
      */
     private function getConsumer(string $consumerAliasName): ConsumerInterface
     {
-        return app()->makeWith(
-            ConsumerInterface::class, [$consumerAliasName]
-        );
+        return app()->makeWith(ConsumerInterface::class, [$consumerAliasName]);
     }
 
     /**

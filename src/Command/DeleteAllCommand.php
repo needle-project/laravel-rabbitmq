@@ -53,14 +53,13 @@ class DeleteAllCommand extends Command
     {
         $hasErrors = false;
         /** @var PublisherInterface $entity */
-        foreach ($this->container->getPublishers() as $publisherName => $publisher) {
+        foreach ($this->container->getPublishers() as $publisherName => $entity) {
             try {
-                $entity = $publisher->getEntity();
                 $entity->delete();
                 $this->output->writeln(
                     sprintf(
                         "Deleted entity <info>%s</info> for publisher [<fg=yellow>%s</>]",
-                        (string)$entity->getName(),
+                        (string)$entity->getAliasName(),
                         (string)$publisherName
                     )
                 );
@@ -69,7 +68,7 @@ class DeleteAllCommand extends Command
                 $this->output->error(
                     sprintf(
                         "Could not delete entity %s for publisher [%s], got:\n%s",
-                        (string)$entity->getName(),
+                        (string)$entity->getAliasName(),
                         (string)$publisherName,
                         (string)$e->getMessage()
                     )
@@ -77,16 +76,14 @@ class DeleteAllCommand extends Command
             }
         }
 
-        /** @var ConsumerInterface $entity */
-        foreach ($this->container->getConsumers() as $consumerAliasName => $consumer) {
+        foreach ($this->container->getConsumers() as $consumerAliasName => $entity) {
             try {
                 /** @var QueueEntity $entity */
-                $entity = $consumer->getEntity();
                 $entity->delete();
                 $this->output->writeln(
                     sprintf(
                         "Deleted entity <info>%s</info> for consumer [<fg=yellow>%s</>]",
-                        (string)$entity->getName(),
+                        (string)$entity->getAliasName(),
                         (string)$consumerAliasName
                     )
                 );
@@ -95,7 +92,7 @@ class DeleteAllCommand extends Command
                 $this->output->error(
                     sprintf(
                         "Could not delete entity %s for consumer [%s], got:\n%s",
-                        (string)$entity->getName(),
+                        (string)$entity->getAliasName(),
                         (string)$consumerAliasName,
                         (string)$e->getMessage()
                     )

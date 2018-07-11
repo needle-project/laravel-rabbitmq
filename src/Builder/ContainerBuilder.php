@@ -41,7 +41,7 @@ class ContainerBuilder
             } else {
                 throw new \RuntimeException(
                     sprintf(
-                        "Cannot create publisher %s: no exchange or queue named %s is defined!",
+                        "Cannot create publisher %s: no exchange or queue named %s defined!",
                         (string)$publisherAliasName,
                         (string)$publisherEntityBind
                     )
@@ -55,16 +55,25 @@ class ContainerBuilder
         }
 
         foreach ($config['consumers'] as $consumerAliasName => $consumerDetails) {
-             $prefetchCount = $consumerDetails['prefetch_count'];
-             $messageProcessor = $consumerDetails['message_processor'];
+            $prefetchCount    = $consumerDetails['prefetch_count'];
+            $messageProcessor = $consumerDetails['message_processor'];
 
-             $consumer = new Consumer(
-                 $consumerAliasName,
-                 $entities->get($consumerDetails['queue']),
-                 $messageProcessor,
-                 $prefetchCount
-             );
-             $container->addConsumer($consumerAliasName, $consumer);
+            if ($queues->has($consumerDetails['queue'])) {
+                /** @var QueueEntity $entity */
+                $entity = $queues->get($consumerDetails['queue']);
+            } else {
+                throw new \RuntimeException(
+                    sprintf(
+                        "Cannot create consumer %s: no queue named %s defined!",
+                        (string)$consumerAliasName,
+                        (string)$consumerDetails['queue']
+                    )
+                );
+            }
+
+            $entity->setPrefetchCount($prefetchCount);
+            $entity->setMessageProcessor($messageProcessor);
+            $container->addConsumer($consumerAliasName, $entity);
         }
 
         return $container;
@@ -114,7 +123,7 @@ class ContainerBuilder
                 ExchangeEntity::createExchange(
                     $connections->get($exchangeDetails['connection']),
                     $exchangeAliasName,
-                    $exchangeDetails
+                    array_merge($exchangeDetails['attributes'], ['name' => $exchangeDetails['name']])
                 )
             );
         }
@@ -147,7 +156,7 @@ class ContainerBuilder
                 QueueEntity::createQueue(
                     $connections->get($queueDetails['connection']),
                     $queueAliasName,
-                    $queueDetails
+                    array_merge($queueDetails['attributes'], ['name' => $queueDetails['name']])
                 )
             );
         }

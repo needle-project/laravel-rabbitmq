@@ -1,8 +1,8 @@
 <?php
 namespace NeedleProject\LaravelRabbitMq;
 
-use NeedleProject\LaravelRabbitMq\Consumer\ConsumerInterface;
-use NeedleProject\LaravelRabbitMq\Publisher\PublisherInterface;
+use NeedleProject\LaravelRabbitMq\ConsumerInterface;
+use NeedleProject\LaravelRabbitMq\PublisherInterface;
 
 /**
  * Class Container

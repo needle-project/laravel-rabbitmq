@@ -54,7 +54,7 @@ class SetupCommand extends Command
     {
         $hasErrors = false;
         /** @var QueueEntity|ExchangeEntity $entity */
-        foreach ($this->container->getPublishers() as $publisherName => $publisher) {
+        foreach ($this->container->getPublishers() as $publisherName => $entity) {
             try {
                 $entity->create();
                 $this->output->writeln(
@@ -78,7 +78,7 @@ class SetupCommand extends Command
         }
 
         /** @var ConsumerInterface $entity */
-        foreach ($this->container->getConsumers() as $consumerAliasName => $consumer) {
+        foreach ($this->container->getConsumers() as $consumerAliasName => $entity) {
             try {
                 /** @var QueueEntity $entity */
                 $entity->create();
@@ -105,14 +105,13 @@ class SetupCommand extends Command
 
         $this->output->block("Create binds");
         /** @var PublisherInterface $entity */
-        foreach ($this->container->getPublishers() as $publisherName => $publisher) {
+        foreach ($this->container->getPublishers() as $publisherName => $entity) {
             try {
-                $entity = $publisher->getEntity();
                 $entity->bind();
                 $this->output->writeln(
                     sprintf(
                         "Created bind <info>%s</info> for publisher [<fg=yellow>%s</>]",
-                        (string)$entity->getName(),
+                        (string)$entity->getAliasName(),
                         (string)$publisherName
                     )
                 );
@@ -121,7 +120,7 @@ class SetupCommand extends Command
                 $this->output->error(
                     sprintf(
                         "Could not bind entity %s for publisher [%s], got:\n%s",
-                        (string)$entity->getName(),
+                        (string)$entity->getAliasName(),
                         (string)$publisherName,
                         (string)$e->getMessage()
                     )
@@ -130,14 +129,13 @@ class SetupCommand extends Command
         }
 
         /** @var ConsumerInterface $entity */
-        foreach ($this->container->getConsumers() as $consumerAliasName => $consumer) {
+        foreach ($this->container->getConsumers() as $consumerAliasName => $entity) {
             try {
-                $entity = $consumer->getEntity();
                 $entity->bind();
                 $this->output->writeln(
                     sprintf(
                         "Bind entity <info>%s</info> for consumer [<fg=yellow>%s</>]",
-                        (string)$entity->getName(),
+                        (string)$entity->getAliasName(),
                         (string)$consumerAliasName
                     )
                 );
@@ -146,7 +144,7 @@ class SetupCommand extends Command
                 $this->output->error(
                     sprintf(
                         "Could not create bind %s for consumer [%s], got:\n%s",
-                        (string)$entity->getName(),
+                        (string)$entity->getAliasName(),
                         (string)$consumerAliasName,
                         (string)$e->getMessage()
                     )

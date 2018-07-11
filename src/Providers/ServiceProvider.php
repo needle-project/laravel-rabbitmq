@@ -8,7 +8,7 @@ use NeedleProject\LaravelRabbitMq\Command\BaseConsumerCommand;
 use NeedleProject\LaravelRabbitMq\Command\DeleteAllCommand;
 use NeedleProject\LaravelRabbitMq\Command\SetupCommand;
 use NeedleProject\LaravelRabbitMq\Command\ListEntitiesCommand;
-use NeedleProject\LaravelRabbitMq\Consumer\ConsumerInterface;
+use NeedleProject\LaravelRabbitMq\ConsumerInterface;
 use NeedleProject\LaravelRabbitMq\Container;
 use NeedleProject\LaravelRabbitMq\Exception\LaravelRabbitMqException;
 use NeedleProject\LaravelRabbitMq\PublisherInterface;
