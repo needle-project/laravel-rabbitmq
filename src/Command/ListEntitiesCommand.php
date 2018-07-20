@@ -3,9 +3,6 @@ namespace NeedleProject\LaravelRabbitMq\Command;
 
 use Illuminate\Console\Command;
 use NeedleProject\LaravelRabbitMq\Container;
-use NeedleProject\LaravelRabbitMq\Entity\AbstractAMQPEntity;
-use NeedleProject\LaravelRabbitMq\Producer\Producer;
-use NeedleProject\LaravelRabbitMq\Producer\ProducerCollection;
 use Symfony\Component\Console\Helper\Table;
 use Symfony\Component\Console\Helper\TableSeparator;
 

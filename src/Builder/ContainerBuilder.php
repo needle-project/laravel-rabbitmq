@@ -2,13 +2,10 @@
 namespace NeedleProject\LaravelRabbitMq\Builder;
 
 use Illuminate\Support\Collection;
-use NeedleProject\LaravelRabbitMq\Connection\AMQPConnection;
-use NeedleProject\LaravelRabbitMq\Consumer\Consumer;
+use NeedleProject\LaravelRabbitMq\AMQPConnection;
 use NeedleProject\LaravelRabbitMq\Container;
-use NeedleProject\LaravelRabbitMq\Entity\EntityFactory;
 use NeedleProject\LaravelRabbitMq\Entity\ExchangeEntity;
 use NeedleProject\LaravelRabbitMq\Entity\QueueEntity;
-use NeedleProject\LaravelRabbitMq\Publisher\Publisher;
 
 /**
  * Class ContainerBuilder

@@ -8,6 +8,7 @@ use PhpAmqpLib\Message\AMQPMessage;
  *
  * @package NeedleProject\LaravelRabbitMq\Processor
  * @author  Adrian Tilita <adrian@tilita.ro>
+ * @codeCoverageIgnore
  */
 class CliOutputProcessor extends AbstractMessageProcessor
 {

@@ -2,10 +2,9 @@
 namespace NeedleProject\LaravelRabbitMq\Command;
 
 use Illuminate\Console\Command;
-use NeedleProject\LaravelRabbitMq\Consumer\ConsumerInterface;
 use NeedleProject\LaravelRabbitMq\Container;
 use NeedleProject\LaravelRabbitMq\Entity\QueueEntity;
-use NeedleProject\LaravelRabbitMq\Publisher\PublisherInterface;
+use NeedleProject\LaravelRabbitMq\PublisherInterface;
 
 /**
  * Class DeleteAllCommand

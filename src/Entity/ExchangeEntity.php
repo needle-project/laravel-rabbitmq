@@ -1,7 +1,7 @@
 <?php
 namespace NeedleProject\LaravelRabbitMq\Entity;
 
-use NeedleProject\LaravelRabbitMq\Connection\AMQPConnection;
+use NeedleProject\LaravelRabbitMq\AMQPConnection;
 use NeedleProject\LaravelRabbitMq\PublisherInterface;
 use PhpAmqpLib\Channel\AMQPChannel;
 use PhpAmqpLib\Message\AMQPMessage;
@@ -29,17 +29,17 @@ class ExchangeEntity implements PublisherInterface
     /**
      * @var AMQPConnection
      */
-    private $connection;
+    protected $connection;
 
     /**
      * @var string
      */
-    private $aliasName;
+    protected $aliasName;
 
     /**
      * @var array
      */
-    private $attributes;
+    protected $attributes;
 
     /**
      * ExchangeEntity constructor.
@@ -63,7 +63,7 @@ class ExchangeEntity implements PublisherInterface
      */
     public static function createExchange(AMQPConnection $connection, string $aliasName, array $exchangeDetails)
     {
-        return new self(
+        return new static(
             $connection,
             $aliasName,
             array_merge(self::DEFAULTS, $exchangeDetails)

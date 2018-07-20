@@ -1,5 +1,5 @@
 <?php
-namespace NeedleProject\LaravelRabbitMq\Connection;
+namespace NeedleProject\LaravelRabbitMq;
 
 use PhpAmqpLib\Channel\AMQPChannel;
 use PhpAmqpLib\Connection\AMQPStreamConnection;
@@ -7,7 +7,7 @@ use PhpAmqpLib\Connection\AMQPStreamConnection;
 /**
  * Class AMQPConnection
  *
- * @package NeedleProject\LaravelRabbitMq\Connection
+ * @package NeedleProject\LaravelRabbitMq
  */
 class AMQPConnection
 {
@@ -83,7 +83,7 @@ class AMQPConnection
     {
         $this->aliasName = $aliasName;
         $this->connectionDetails = $connectionDetails;
-        if ($connectionDetails['lazy'] === false) {
+        if (isset($connectionDetails['lazy']) &&  $connectionDetails['lazy'] === false) {
             // dummy call
             $this->getConnection();
         }

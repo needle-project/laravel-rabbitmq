@@ -1,7 +1,7 @@
 <?php
 namespace Tests\NeedleProject\LaravelRabbitMq\Stubs;
 
-use NeedleProject\LaravelRabbitMq\Connection\AMQPConnection;
+use NeedleProject\LaravelRabbitMq\AMQPConnection;
 
 class ConnectionDetailsStub extends AMQPConnection
 {

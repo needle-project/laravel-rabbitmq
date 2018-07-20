@@ -6,6 +6,7 @@ namespace NeedleProject\LaravelRabbitMq\Exception;
  *
  * @package NeedleProject\LaravelRabbitMqException\Exception
  * @author  Adrian Tilita <adrian@tilita.ro>
+ * @codeCoverageIgnore
  */
 class ConnectionException implements LaravelRabbitMqException
 {

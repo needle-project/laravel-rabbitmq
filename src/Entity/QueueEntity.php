@@ -1,7 +1,7 @@
 <?php
 namespace NeedleProject\LaravelRabbitMq\Entity;
 
-use NeedleProject\LaravelRabbitMq\Connection\AMQPConnection;
+use NeedleProject\LaravelRabbitMq\AMQPConnection;
 use NeedleProject\LaravelRabbitMq\ConsumerInterface;
 use NeedleProject\LaravelRabbitMq\Processor\MessageProcessorInterface;
 use NeedleProject\LaravelRabbitMq\PublisherInterface;
@@ -32,47 +32,47 @@ class QueueEntity implements PublisherInterface, ConsumerInterface
     /**
      * @var AMQPConnection
      */
-    private $connection;
+    protected $connection;
 
     /**
      * @var string
      */
-    private $aliasName;
+    protected $aliasName;
 
     /**
      * @var array
      */
-    private $attributes;
+    protected $attributes;
 
     /**
      * @var int
      */
-    private $prefetchCount = 1;
+    protected $prefetchCount = 1;
 
     /**
      * @var null|MessageProcessorInterface
      */
-    private $messageProcessor = null;
+    protected $messageProcessor = null;
 
     /**
      * @var int
      */
-    private $limitMessageCount;
+    protected $limitMessageCount;
 
     /**
      * @var int
      */
-    private $limitSecondsUptime;
+    protected $limitSecondsUptime;
 
     /**
      * @var int
      */
-    private $limitMemoryConsumption;
+    protected $limitMemoryConsumption;
 
     /**
      * @var int
      */
-    private $startTime = 0;
+    protected $startTime = 0;
 
     /**
      * @param AMQPConnection $connection
@@ -82,7 +82,7 @@ class QueueEntity implements PublisherInterface, ConsumerInterface
      */
     public static function createQueue(AMQPConnection $connection, string $aliasName, array $exchangeDetails)
     {
-        return new self(
+        return new static(
             $connection,
             $aliasName,
             array_merge(self::DEFAULTS, $exchangeDetails)
