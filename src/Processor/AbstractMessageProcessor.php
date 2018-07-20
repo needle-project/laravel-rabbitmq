@@ -8,6 +8,7 @@ use PhpAmqpLib\Message\AMQPMessage;
  *
  * @package NeedleProject\LaravelRabbitMq\Processor
  * @author  Adrian tilita <adrian@tilita.ro>
+ * @todo    Add Logger
  */
 abstract class AbstractMessageProcessor implements MessageProcessorInterface
 {
@@ -28,10 +29,10 @@ abstract class AbstractMessageProcessor implements MessageProcessorInterface
             if ($response === true) {
                 $message->delivery_info['channel']->basic_ack($message->delivery_info['delivery_tag']);
             } else {
-                $message->delivery_info['channel']->basic_nack($message->delivery_info['delivery_tag']);
+                $message->delivery_info['channel']->basic_nack($message->delivery_info['delivery_tag'], false, true);
             }
         } catch (\Exception $e) {
-            $message->delivery_info['channel']->basic_nack($message->delivery_info['delivery_tag']);
+            $message->delivery_info['channel']->basic_nack($message->delivery_info['delivery_tag'], false, true);
         }
     }
 
