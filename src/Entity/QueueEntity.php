@@ -8,6 +8,8 @@ use NeedleProject\LaravelRabbitMq\PublisherInterface;
 use PhpAmqpLib\Channel\AMQPChannel;
 use PhpAmqpLib\Exception\AMQPTimeoutException;
 use PhpAmqpLib\Message\AMQPMessage;
+use Psr\Log\LoggerAwareInterface;
+use Psr\Log\LoggerAwareTrait;
 
 /**
  * Class QueueEntity
@@ -15,8 +17,10 @@ use PhpAmqpLib\Message\AMQPMessage;
  * @package NeedleProject\LaravelRabbitMq\Entity
  * @author  Adrian Tilita <adrian@tilita.ro>
  */
-class QueueEntity implements PublisherInterface, ConsumerInterface
+class QueueEntity implements PublisherInterface, ConsumerInterface, LoggerAwareInterface
 {
+    use LoggerAwareTrait;
+
     /**
      * @const array Default connections parameters
      */
@@ -218,11 +222,20 @@ class QueueEntity implements PublisherInterface, ConsumerInterface
         $this->setupConsumer($messages, $seconds, $maxMemory);
         while (false === $this->shouldStopConsuming()) {
             try {
-                $this->getChannel()->wait(null, false, $seconds);
+                $this->getChannel()->wait(null, false, 1);
             } catch (AMQPTimeoutException $e) {
                 usleep(1000);
                 $this->getConnection()->reconnect();
             } catch (\Throwable $e) {
+                // stop the consumer
+                $this->stopConsuming();
+
+                $this->logger->critical(sprintf(
+                    "Stopped consuming: %s in %s:%d",
+                    $e->getMessage(),
+                    (string)$e->getFile(),
+                    (int)$e->getLine()
+                ));
                 return 1;
             }
         }
@@ -235,31 +248,43 @@ class QueueEntity implements PublisherInterface, ConsumerInterface
     protected function shouldStopConsuming(): bool
     {
         if ((microtime(true) - $this->startTime) > $this->limitSecondsUptime) {
-            $this->log("Stopped! Timeout reached");
+            $this->logger->debug(
+                "Stopped consumer",
+                [
+                    'limit' => 'time_limit',
+                    'value' => sprintf("%.2f", microtime(true) - $this->startTime)
+                ]
+            );
             return true;
         }
-        // memory_get_peak_usage(true) >= ($this->limitMemoryConsumption / 1048576)
-
         if (memory_get_peak_usage(true) >= ($this->limitMemoryConsumption * 1048576)) {
-            $this->log(
-                sprintf(
-                    "Stopped! Memory consumption reached %d MB",
-                    (int)round(memory_get_peak_usage(true) / 1048576, 2)
-                )
+            $this->logger->debug(
+                "Stopped consumer",
+                [
+                    'limit' => 'memory_limit',
+                    'value' => (int)round(memory_get_peak_usage(true) / 1048576, 2)
+                ]
             );
             return true;
         }
 
         if ($this->getMessageProcessor()->getProcessedMessages() >= $this->limitMessageCount) {
-            $this->log(
-                sprintf(
-                    "Stopped! %d total messages consumed!",
-                    (int)$this->getMessageProcessor()->getProcessedMessages()
-                )
+            $this->logger->debug(
+                "Stopped consumer",
+                ['limit' => 'message_count', 'value' => (int)$this->getMessageProcessor()->getProcessedMessages()]
             );
             return true;
         }
         return false;
+    }
+
+    /**
+     * Stop the consumer
+     */
+    public function stopConsuming()
+    {
+        $this->logger->debug("Stopping consumer!");
+        $this->getChannel()->basic_cancel($this->getConsumerTag(), false, true);
     }
 
     /**
@@ -283,7 +308,7 @@ class QueueEntity implements PublisherInterface, ConsumerInterface
         $this->getChannel()
             ->basic_consume(
                 $this->attributes['name'],
-                sprintf("%s_%s_%s", $this->aliasName, gethostname(), getmypid()),
+                $this->getConsumerTag(),
                 false,
                 false,
                 false,
@@ -293,6 +318,57 @@ class QueueEntity implements PublisherInterface, ConsumerInterface
                     'consume'
                 ]
             );
+        $this->registerShutdownHandler();
+        $this->handleKillSignals();
+    }
+
+    /**
+     * Handle shutdown - Usually in case "Allowed memory size of x bytes exhausted"
+     */
+    private function registerShutdownHandler()
+    {
+        $consumer = $this;
+        register_shutdown_function(function () use($consumer) {
+            $consumer->stopConsuming();
+        });
+    }
+
+    /**
+     * Register signals
+     */
+    private function handleKillSignals()
+    {
+        if (extension_loaded('pcntl')) {
+            pcntl_signal(SIGTERM, [$this, 'catchKillSignal']);
+            pcntl_signal(SIGKILL, [$this, 'catchKillSignal']);
+            pcntl_signal(SIGSTOP, [$this, 'catchKillSignal']);
+
+            if (function_exists('pcntl_signal_dispatch')) {
+                // let the signal go forward
+                pcntl_signal_dispatch();
+            }
+
+        }
+    }
+
+    /**
+     * Handle Kill Signals
+     * @param int $signalNumber
+     */
+    private function catchKillSignal(int $signalNumber)
+    {
+        $this->stopConsuming();
+        $this->logger->debug(sprintf("Caught signal %d", $signalNumber));
+    }
+
+    /**
+     * It is the tag that is listed in RabbitMQ UI as the consumer "name"
+     *
+     * @return string
+     */
+    private function getConsumerTag(): string
+    {
+        return sprintf("%s_%s_%s", $this->aliasName, gethostname(), getmypid());
     }
 
     /**
@@ -308,18 +384,27 @@ class QueueEntity implements PublisherInterface, ConsumerInterface
 
     /**
      * @param AMQPMessage $message
+     * @throws \Throwable
      */
     public function consume(AMQPMessage $message)
     {
-        $this->log("Received: " . $message->getBody());
-        $this->getMessageProcessor()->consume($message);
-    }
+        $this->logger->debug("Consumed message", [$message->getBody()]);
+        try {
+            $this->getMessageProcessor()->consume($message);
+        } catch (\Throwable $e) {
+            $this->logger->notice(
+                sprintf(
+                    "Got %s from %s in %d",
+                    $e->getMessage(),
+                    (string)$e->getFile(),
+                    (int)$e->getLine()
+                )
+            );
+            // let the exception slide, the processor should handle
+            // exception, this is just a notice that should not
+            // ever appear
+            throw $e;
+        }
 
-    /**
-     * @param string $message
-     */
-    private function log(string $message)
-    {
-        // do nothing at the moment
     }
 }

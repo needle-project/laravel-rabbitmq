@@ -1,3 +1,6 @@
+[![Build Status](https://travis-ci.org/needle-project/process-transaction.svg?branch=master)](https://travis-ci.org/needle-project/process-transaction)
+
+
 # Laravel RabbitMQ
 A simple rabbitmq library for laravel
 

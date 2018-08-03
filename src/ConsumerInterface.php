@@ -18,4 +18,9 @@ interface ConsumerInterface
      * @return mixed
      */
     public function startConsuming(int $messages, int $seconds, int $maxMemory);
+
+    /**
+     * Stop the consumer
+     */
+    public function stopConsuming();
 }

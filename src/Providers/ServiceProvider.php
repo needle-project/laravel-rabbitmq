@@ -12,6 +12,8 @@ use NeedleProject\LaravelRabbitMq\ConsumerInterface;
 use NeedleProject\LaravelRabbitMq\Container;
 use NeedleProject\LaravelRabbitMq\Exception\LaravelRabbitMqException;
 use NeedleProject\LaravelRabbitMq\PublisherInterface;
+use Psr\Log\LoggerAwareInterface;
+use Psr\Log\LoggerInterface;
 
 /**
  * Class ServiceProvider
@@ -68,7 +70,10 @@ class ServiceProvider extends LaravelServiceProvider
             if (!$container->hasConsumer($aliasName)) {
                 throw new \RuntimeException("Cannot make Consumer.\nNo consumer with alias name {$aliasName} found!");
             }
-            return $container->getConsumer($aliasName);
+            /** @var LoggerAwareInterface $consumer */
+            $consumer = $container->getConsumer($aliasName);
+            $consumer->setLogger($application->make(LoggerInterface::class));
+            return $consumer;
         });
 
         $this->commands([
