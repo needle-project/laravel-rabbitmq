@@ -9,7 +9,7 @@ Installation
 
 Run:
 ```bash
-composer require needle-project/laravel-rabbitmq:dev-develop
+composer require needle-project/laravel-rabbitmq
 ```
 
 For Laravel version 5.5 or higher the library should be automatically loaded via [Package discovery](https://laravel.com/docs/5.6/packages#package-discovery).
@@ -31,80 +31,127 @@ return [
 
 Configuration
 -------------
-Inside `laravel_rabbitmq.php` you must define a configuration for the library.
+* Create a new file called `laravel_rabbitmq.php` inside your Laravel's config directory.
+* Fill out the config based on your needs.
 
-Example config:
+Configuration anatomy
 ```php
 return [
     'connections' => [
-        'default' => [
-            'hostname' => 'localhost', // default localhost,
-            'port' => 5672,
-            'username' => 'guest', // default guest
-            'password' => 'guest', // default guest,
-            'vhost' => '/', // default "/"
-
-            # More info about timeouts can be found on https://www.rabbitmq.com/networking.html
-            'connect_timeout' => 1  // default connection timeout
+        'connectionA' => [/** Connection A attributes */],
+        'connectionB' => [/** Connection B attributes */],
+    ],
+    'exchanges' => [
+        'exchangeA' => [
+            // Tells that the exchange will use the connection A
+            'connection' => 'connectionA',
+            /** Exchange A Attributes */
+        ],
+        'exchangeB' => [
+            // Tells that the exchange will use the connection B
+            'connection' => 'connectionB',
+            /** Exchange B Attributes */
         ]
     ],
-    'entities' => [
-        'order.create.exchange' => [
+    'queues' => [
+        'queueA' => [
+            // Tells that the queue will use the connection A
+            'connection' => 'connectionA',
+            /** Queue A Attributes */
+        ]
+    ],
+    'publishers' => [
+        'aPublisherName' => /** will publish to */ 'exchangeA'
+    ],
+    'consumers' => [
+        'aConsumerName' => [
+            // will read messages from
+            'queue' => 'queueA',
+            // and will send the for processing to an "NeedleProject\LaravelRabbitMq\Processor\MessageProcessorInterface"
+            'message_processor' => \NeedleProject\LaravelRabbitMq\Processor\CliOutputProcessor::class
+        ]
+    ]
+]
+```
+
+Example of a full configuration:
+```php
+return [
+    'connections' => [
+        'myConnectionAliasName' => [
+            // all fields are optional, if they are not defined they
+            // will take the default values
+            'hostname'           => '127.0.0.1',
+            'port'               => 5672,
+            'username'           => 'guest',
+            'password'           => 'guest',
+            'vhost'              => '/',
+    
+            # whether the connection should be lazy
+            'lazy'               => true,
+    
+            # More info about timeouts can be found on https://www.rabbitmq.com/networking.html
+            'read_write_timeout' => 8,   // default timeout for writing/reading (in seconds)
+            'connect_timeout'    => 10,
+            'heartbeat'          => 4
+        ]
+    ],
+    'exchanges' => [
+        'InternalAliasNameForTheExchange' => [
             // used connection for the producer
-            'connection' => 'default',
-            'name'       => 'order.create',
-            'type'       => 'exchange',
+            'connection' => 'myConnectionAliasName',
+            'name'       => 'my.exachange.name.in.rabbitMq',
             'attributes' => [
+                // mandatory fields
                 'exchange_type' => 'topic',
-                // optional fields
+                // optional fields - if none is set,
+                // the defaults will be used
                 'passive' => false,
                 'durable' => false,
                 'auto_delete' => false,
                 'internal' => false,
-                'nowait' => false
+                'nowait' => false,
+                
+                // whether the exchange should create a bind
+                // with a queue
+                'bind' => [
+                    [
+                        'queue' => 'my.queue.that.will.receive.messages',
+                        'routing_key' => '*'
+                    ]
+                ]
             ]
-        ],
-        'order.update.exchange' => [
+        ]
+    ],
+    'queues' => [
+        'InternalAliasNameForTheQueue' => [
             // used connection for the producer
-            'connection' => 'default',
-            'name'       => 'order.update',
-            'type'       => 'exchange',
+            'connection' => 'myConnectionAliasName',
+            'name'       => 'my.queue.name.on.rabbitMq',
             'attributes' => [
-                'exchange_type' => 'topic',
                 // optional fields
                 'passive' => false,
                 'durable' => false,
                 'auto_delete' => false,
                 'internal' => false,
                 'nowait' => false,
-            ]
-        ],
-        'dwh.order.proxy' => [
-            // used connection for the producer
-            'connection' => 'default',
-            'name'       => 'dwh.order.proxy',
-            'type'       => 'queue',
-            'attributes' => [
-                // optional fields
-                'passive' => false,
-                'durable' => false,
-                'auto_delete' => false,
-                'internal' => false,
-                'nowait' => false,
-                'exchange' => [
-                    'order.update',
-                    'order.create'
+                'exclusive' => false,
+                // bind with an exchange
+                'bind' => [
+                    [
+                        'exchange' => 'my.queue.that.will.receive.messages',
+                        'routing_key' => '*'
+                    ]
                 ]
             ]
         ],
     ],
     'publishers' => [
-        'order.create' => 'order.create.exchange',
-        'order.update' => 'order.update.exchange'
+        'publisherAliasName' => 'InternalAliasNameForTheExchange'
     ],
     'consumers' => [
-        'dwh.order.queue' => [
-            'queue' => 'dwh.order.proxy',
+        'consumerAliasName' => [
+            'queue' => 'InternalAliasNameForTheQueue',
             'prefetch_count' => 10,
             'message_processor' => \NeedleProject\LaravelRabbitMq\Processor\CliOutputProcessor::class
         ]
@@ -127,9 +174,9 @@ $ php artisan rabbitmq:list
 +---+-----------+---------------------------+
 | # | Type      | Name                      |
 +---+-----------+---------------------------+
-| 1 | Publisher | publisher.name            |
+| 1 | Publisher | publisherAliasName        |
 +---+-----------+---------------------------+
-| 2 | Consumer  | consumer.name             |
+| 2 | Consumer  | consumerAliasName         |
 +---+-----------+---------------------------+
 ```
 
@@ -141,7 +188,7 @@ $ php artisan rabbitmq:list
  * @var $app \Illuminate\Contracts\Container\Container
  * @var $publisher \NeedleProject\LaravelRabbitMq\PublisherInterface 
  */
-$publisher = $app->makeWith(PublisherInterface::class, ['vendor.create']);
+$publisher = $app->makeWith(PublisherInterface::class, ['publisherAliasName']);
 
 $message = [
     'title' => 'Hello world',
@@ -149,7 +196,7 @@ $message = [
 ];
 $routingKey = '*';
 
-$publisher->publish(json_encode($message), $routingKey);
+$publisher->publish(json_encode($message), /* optional */$routingKey);
 
 ```
 
@@ -158,8 +205,15 @@ Create a message processor by extending `\NeedleProject\LaravelRabbitMq\Processo
 
 Start the message consumer/listener:
 ```bash
-php artisan rabbitmq:consume consumer.name
+php artisan rabbitmq:consume consumerAliasName
 ```
+Running consumers with limit (it will stop when one of the limits are reached)
+
+```bash
+php artisan rabbitmq:consume consumerAliasName --time=60 --messages=100 --memory=64
+```
+This tells the consumer to stop if it run for 1 minute or consumer 100 messages or has reached 64MB of memory usage
+
 
 #### Delete all the defined exchanges and bound queues, run:
 
