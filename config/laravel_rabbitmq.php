@@ -1,69 +1,81 @@
 <?php
 return [
     'connections' => [
-        'default' => [
-            'hostname' => 'localhost', // default localhost,
-            'port' => 5672,
-            'username' => 'guest', // default guest
-            'password' => 'guest', // default guest,
-            'vhost' => '/', // default "/"
+        'myConnectionAliasName' => [
+            // all fields are optional, if they are not defined they
+            // will take the default values
+            'hostname'           => '127.0.0.1',
+            'port'               => 5672,
+            'username'           => 'guest',
+            'password'           => 'guest',
+            'vhost'              => '/',
+
+            # whether the connection should be lazy
+            'lazy'               => true,
 
             # More info about timeouts can be found on https://www.rabbitmq.com/networking.html
-            'connect_timeout' => 1  // default connection timeout
+            'read_write_timeout' => 8,   // default timeout for writing/reading (in seconds)
+            'connect_timeout'    => 10,
+            'heartbeat'          => 4
         ]
     ],
-    'entities' => [
-        'resource.create.exchange' => [
+    'exchanges' => [
+        'InternalAliasNameForTheExchange' => [
             // used connection for the producer
-            'connection' => 'default',
-            'exchange' => [
-                'name' => 'resource.create',
-                'type' => 'topic',
-                // optional fields
-                'passive' => false,
-                'durable' => false,
-                'auto_delete' => false,
-                'internal' => false,
-                'nowait' => false
-            ]
-        ],
-        'resource.update.exchange' => [
-            // used connection for the producer
-            'connection' => 'default',
-            'exchange' => [
-                'name' => 'resource.update',
-                'type' => 'topic',
-                // optional fields
-                'passive' => false,
-                'durable' => false,
-                'auto_delete' => false,
-                'internal' => false,
-                'nowait' => false
-            ]
-        ],
-        'resource.create.queue' => [
-            // used connection for the producer
-            'connection' => 'default',
-            'queue' => [
-                'name' => 'resource.create',
+            'connection' => 'myConnectionAliasName',
+            'name'       => 'my.exachange.name.in.rabbitMq',
+            'attributes' => [
+                // mandatory fields
+                'exchange_type' => 'topic',
+                // optional fields - if none is set,
+                // the defaults will be used
                 'passive' => false,
                 'durable' => false,
                 'auto_delete' => false,
                 'internal' => false,
                 'nowait' => false,
-                'exchange' => 'resource.create',
-                'routing_key' => '*'
+
+                // whether the exchange should create a bind
+                // with a queue
+                'bind' => [
+                    [
+                        'queue' => 'my.queue.that.will.receive.messages',
+                        'routing_key' => '*'
+                    ]
+                ]
             ]
         ]
     ],
-    'producers' => [
-        'resource.place' => 'resource.create.exchange',
-        'resource.update' => 'resource.update.exchange'
+    'queues' => [
+        'InternalAliasNameForTheQueue' => [
+            // used connection for the producer
+            'connection' => 'myConnectionAliasName',
+            'name'       => 'my.queue.name.on.rabbitMq',
+            'attributes' => [
+                // optional fields
+                'passive' => false,
+                'durable' => false,
+                'auto_delete' => false,
+                'internal' => false,
+                'nowait' => false,
+                'exclusive' => false,
+                // bind with an exchange
+                'bind' => [
+                    [
+                        'exchange' => 'my.queue.that.will.receive.messages',
+                        'routing_key' => '*'
+                    ]
+                ]
+            ]
+        ],
+    ],
+    'publishers' => [
+        'publisherAliasName' => 'InternalAliasNameForTheExchange'
     ],
     'consumers' => [
-        'order.create' => [
-            'queue' => 'resource.create.queue',
-            'prefetch_size' => 1,
+        'consumerAliasName' => [
+            'queue' => 'InternalAliasNameForTheQueue',
+            'prefetch_count' => 10,
             'message_processor' => \NeedleProject\LaravelRabbitMq\Processor\CliOutputProcessor::class
         ]
     ]
