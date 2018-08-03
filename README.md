@@ -1,5 +1,6 @@
 [![Build Status](https://travis-ci.org/needle-project/process-transaction.svg?branch=master)](https://travis-ci.org/needle-project/process-transaction)
-
+[![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/needle-project/laravel-rabbitmq/badges/quality-score.png?b=master)](https://scrutinizer-ci.com/g/needle-project/laravel-rabbitmq/?branch=master)
+[![Code Coverage](https://scrutinizer-ci.com/g/needle-project/laravel-rabbitmq/badges/coverage.png?b=master)](https://scrutinizer-ci.com/g/needle-project/laravel-rabbitmq/?branch=master)
 
 # Laravel RabbitMQ
 A simple rabbitmq library for laravel
