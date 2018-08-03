@@ -25,6 +25,13 @@
     "autoload-dev": {
         "psr-4": { "Tests\\NeedleProject\\LaravelRabbitMq\\": "tests/" }
     },
+	"extra": {
+		"laravel": {
+			"providers": [
+				"NeedleProject\\LaravelRabbitMq\\Providers\\ServiceProvider"
+			]
+		}
+	},
     "minimum-stability": "dev",
     "prefer-stable": true
 }
