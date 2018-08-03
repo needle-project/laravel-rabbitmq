@@ -328,7 +328,7 @@ class QueueEntity implements PublisherInterface, ConsumerInterface, LoggerAwareI
     private function registerShutdownHandler()
     {
         $consumer = $this;
-        register_shutdown_function(function () use($consumer) {
+        register_shutdown_function(function () use ($consumer) {
             $consumer->stopConsuming();
         });
     }
@@ -347,7 +347,6 @@ class QueueEntity implements PublisherInterface, ConsumerInterface, LoggerAwareI
                 // let the signal go forward
                 pcntl_signal_dispatch();
             }
-
         }
     }
 
@@ -405,6 +404,5 @@ class QueueEntity implements PublisherInterface, ConsumerInterface, LoggerAwareI
             // ever appear
             throw $e;
         }
-
     }
 }

@@ -103,7 +103,8 @@ class ExchangeEntityTest extends TestCase
 
         $exchange = ExchangeEntity::createExchange(
             $amqpConnection,
-            'foo', [
+            'foo',
+            [
                 'name' => 'exchange.name.on.rabbit'
             ]
         );
@@ -134,7 +135,8 @@ class ExchangeEntityTest extends TestCase
 
         $exchange = ExchangeEntity::createExchange(
             $amqpConnection,
-            'foo', [
+            'foo',
+            [
                 'name' => 'exchange.name.on.rabbit',
                 'bind' => [
                     ['queue' => 'first.queue', 'routing_key' => 'a'],
@@ -157,7 +159,8 @@ class ExchangeEntityTest extends TestCase
 
         $exchange = ExchangeEntity::createExchange(
             $amqpConnection,
-            'foo', [
+            'foo',
+            [
                 'name' => 'exchange.name.on.rabbit'
             ]
         );
@@ -190,7 +193,8 @@ class ExchangeEntityTest extends TestCase
 
         $exchange = ExchangeEntity::createExchange(
             $amqpConnection,
-            'foo', [
+            'foo',
+            [
                 'name' => 'exchange.name.on.rabbit'
             ]
         );
@@ -223,7 +227,8 @@ class ExchangeEntityTest extends TestCase
 
         $exchange = ExchangeEntity::createExchange(
             $amqpConnection,
-            'foo', [
+            'foo',
+            [
                 'name' => 'exchange.name.on.rabbit'
             ]
         );

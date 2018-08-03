@@ -126,7 +126,8 @@ class QueueEntityTest extends TestCase
 
         $queue = QueueEntity::createQueue(
             $amqpConnection,
-            'foo', [
+            'foo',
+            [
                 'name' => 'queue.name.on.rabbit'
             ]
         );
@@ -157,7 +158,8 @@ class QueueEntityTest extends TestCase
 
         $queue = QueueEntity::createQueue(
             $amqpConnection,
-            'foo', [
+            'foo',
+            [
                 'name' => 'queue.name.on.rabbit',
                 'bind' => [
                     ['exchange' => 'first.exchange', 'routing_key' => 'a'],
@@ -194,7 +196,8 @@ class QueueEntityTest extends TestCase
 
         $queue = QueueEntity::createQueue(
             $amqpConnection,
-            'foo', [
+            'foo',
+            [
                 'name' => 'queue.name.on.rabbit'
             ]
         );

@@ -50,7 +50,7 @@ class BaseConsumerCommand extends Command
             return $consumer->startConsuming($messageCount, $waitTime, $memoryLimit);
         } catch (\Throwable $e) {
             $consumer->stopConsuming();
-            $this->output->error("a" . $e->getMessage());
+            $this->output->error($e->getMessage());
             return -1;
         }
     }
