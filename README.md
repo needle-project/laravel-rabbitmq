@@ -4,18 +4,7 @@ A simple rabbitmq library for laravel
 Installation
 ------------
 
-Add to composer.json
-```json
-"repositories": [
-    {
-      "type": "vcs",
-      "url": "git@github.com:needle-project/laravel-rabbitmq.git",
-      "no-api": true
-    }
-]
-```
-
-Then run:
+Run:
 ```bash
 composer require needle-project/laravel-rabbitmq:dev-develop
 ```
@@ -120,7 +109,7 @@ return [
 ];
 ```
 
-To simply create all the defined exchanges and bound queues as defined in the configuration file, run:
+##### To simply create all the defined exchanges and bound queues as defined in the configuration file, run:
 ```bash
 php artisan rabbitmq:setup
 ```
