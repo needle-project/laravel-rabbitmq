@@ -29,7 +29,7 @@ class BaseConsumerCommand extends Command
      * @param string $consumerAliasName
      * @return ConsumerInterface
      */
-    private function getConsumer(string $consumerAliasName): ConsumerInterface
+    protected function getConsumer(string $consumerAliasName): ConsumerInterface
     {
         return app()->makeWith(ConsumerInterface::class, [$consumerAliasName]);
     }
