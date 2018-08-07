@@ -224,11 +224,9 @@ class QueueEntity implements PublisherInterface, ConsumerInterface, LoggerAwareI
             try {
                 $this->getChannel()->wait(null, false, 1);
             } catch (AMQPTimeoutException $e) {
-
                 $this->logger->debug("Timeout exceeded, reconnecting!");
                 usleep(1000);
                 $this->getConnection()->reconnect();
-
                 $this->setupChannelConsumer();
             } catch (\Throwable $e) {
                 // stop the consumer
