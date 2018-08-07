@@ -39,6 +39,30 @@ class ServiceProvider extends LaravelServiceProvider
      */
     public function boot()
     {
+        $this->publishConfig();
+        $this->registerContainer();
+        $this->registerPublishers();
+        $this->registerConsumers();
+        $this->registerCommands();
+    }
+
+    /**
+     * Publish Config
+     */
+    private function publishConfig()
+    {
+        $this->publishes([
+            realpath(
+                dirname(__FILE__)
+            ) . '../../config/laravel_rabbitmq.php' => config_path('laravel_rabbitmq.php'),
+        ]);
+    }
+
+    /**
+     * Create container and register binding
+     */
+    private function registerContainer()
+    {
         $config = config('laravel_rabbitmq', []);
         if (!is_array($config)) {
             throw new \RuntimeException(
@@ -55,7 +79,13 @@ class ServiceProvider extends LaravelServiceProvider
                 return $container->createContainer($config);
             }
         );
+    }
 
+    /**
+     * Register publisher bindings
+     */
+    private function registerPublishers()
+    {
         // Get "tagged" like Publisher
         $this->app->singleton(PublisherInterface::class, function (Application $application, $arguments) {
             /** @var Container $container */
@@ -66,7 +96,13 @@ class ServiceProvider extends LaravelServiceProvider
             $aliasName = $arguments[0];
             return $container->getPublisher($aliasName);
         });
+    }
 
+    /**
+     * Register consumer bindings
+     */
+    private function registerConsumers()
+    {
         // Get "tagged" like Consumers
         $this->app->singleton(ConsumerInterface::class, function (Application $application, $arguments) {
             /** @var Container $container */
@@ -84,7 +120,13 @@ class ServiceProvider extends LaravelServiceProvider
             $consumer->setLogger($application->make(LoggerInterface::class));
             return $consumer;
         });
+    }
 
+    /**
+     * Register commands
+     */
+    private function registerCommands()
+    {
         $this->commands([
             SetupCommand::class,
             ListEntitiesCommand::class,
