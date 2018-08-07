@@ -54,7 +54,7 @@ class ServiceProvider extends LaravelServiceProvider
         $this->publishes([
             realpath(
                 dirname(__FILE__)
-            ) . '../../config/laravel_rabbitmq.php' => config_path('laravel_rabbitmq.php'),
+            ) . '/../../config/laravel_rabbitmq.php' => config_path('laravel_rabbitmq.php'),
         ]);
     }
 
