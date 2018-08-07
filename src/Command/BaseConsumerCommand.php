@@ -8,6 +8,7 @@ use NeedleProject\LaravelRabbitMq\ConsumerInterface;
  * Class BaseConsumerCommand
  *
  * @package NeedleProject\LaravelRabbitMq\Command
+ * @author  Adrian Tilita <adrian.t@adoreme.com>
  */
 class BaseConsumerCommand extends Command
 {

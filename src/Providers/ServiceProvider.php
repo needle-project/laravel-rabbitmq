@@ -8,6 +8,7 @@ use NeedleProject\LaravelRabbitMq\Command\BaseConsumerCommand;
 use NeedleProject\LaravelRabbitMq\Command\DeleteAllCommand;
 use NeedleProject\LaravelRabbitMq\Command\SetupCommand;
 use NeedleProject\LaravelRabbitMq\Command\ListEntitiesCommand;
+use NeedleProject\LaravelRabbitMq\ConfigHelper;
 use NeedleProject\LaravelRabbitMq\ConsumerInterface;
 use NeedleProject\LaravelRabbitMq\Container;
 use NeedleProject\LaravelRabbitMq\Exception\LaravelRabbitMqException;
@@ -38,7 +39,15 @@ class ServiceProvider extends LaravelServiceProvider
      */
     public function boot()
     {
-        $config = config('laravel_rabbitmq');
+        $config = config('laravel_rabbitmq', []);
+        if (!is_array($config)) {
+            throw new \RuntimeException(
+                "Invalid configuration provided for LaravelRabbitMQ!"
+            );
+        }
+        $configHelper = new ConfigHelper();
+        $config = $configHelper->addDefaults($config);
+
         $this->app->singleton(
             Container::class,
             function () use ($config) {
