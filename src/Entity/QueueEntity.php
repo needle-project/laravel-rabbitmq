@@ -54,7 +54,7 @@ class QueueEntity implements PublisherInterface, ConsumerInterface, LoggerAwareI
     protected $prefetchCount = 1;
 
     /**
-     * @var null|MessageProcessorInterface
+     * @var null|string|MessageProcessorInterface
      */
     protected $messageProcessor = null;
 
@@ -74,7 +74,7 @@ class QueueEntity implements PublisherInterface, ConsumerInterface, LoggerAwareI
     protected $limitMemoryConsumption;
 
     /**
-     * @var int
+     * @var double
      */
     protected $startTime = 0;
 
@@ -224,12 +224,13 @@ class QueueEntity implements PublisherInterface, ConsumerInterface, LoggerAwareI
             try {
                 $this->getChannel()->wait(null, false, 1);
             } catch (AMQPTimeoutException $e) {
+                $this->logger->debug("Timeout exceeded, reconnecting!");
                 usleep(1000);
                 $this->getConnection()->reconnect();
+                $this->setupChannelConsumer();
             } catch (\Throwable $e) {
                 // stop the consumer
                 $this->stopConsuming();
-
                 $this->logger->critical(sprintf(
                     "Stopped consuming: %s in %s:%d",
                     $e->getMessage(),
@@ -302,6 +303,14 @@ class QueueEntity implements PublisherInterface, ConsumerInterface, LoggerAwareI
 
         $this->startTime = microtime(true);
 
+        $this->setupChannelConsumer();
+
+        $this->registerShutdownHandler();
+        $this->handleKillSignals();
+    }
+
+    private function setupChannelConsumer()
+    {
         $this->getChannel()
             ->basic_qos(null, $this->prefetchCount, true);
 
@@ -318,8 +327,6 @@ class QueueEntity implements PublisherInterface, ConsumerInterface, LoggerAwareI
                     'consume'
                 ]
             );
-        $this->registerShutdownHandler();
-        $this->handleKillSignals();
     }
 
     /**
