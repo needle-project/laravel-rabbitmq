@@ -34,6 +34,7 @@ return [
 Configuration
 -------------
 * Create a new file called `laravel_rabbitmq.php` inside your Laravel's config directory.
+(Or use `artisan vendor:publish` - Read more [here](https://laravel.com/docs/5.0/packages))
 * Fill out the config based on your needs.
 
 Configuration anatomy
