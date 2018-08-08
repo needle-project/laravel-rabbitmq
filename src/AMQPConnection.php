@@ -8,6 +8,7 @@ use PhpAmqpLib\Connection\AMQPStreamConnection;
  * Class AMQPConnection
  *
  * @package NeedleProject\LaravelRabbitMq
+ * @author  Adrian Tilita <adrian.t@adoreme.com>
  */
 class AMQPConnection
 {
