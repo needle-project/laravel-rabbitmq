@@ -3,6 +3,7 @@ namespace NeedleProject\LaravelRabbitMq\Entity;
 
 use NeedleProject\LaravelRabbitMq\AMQPConnection;
 use NeedleProject\LaravelRabbitMq\ConsumerInterface;
+use NeedleProject\LaravelRabbitMq\Processor\AbstractMessageProcessor;
 use NeedleProject\LaravelRabbitMq\Processor\MessageProcessorInterface;
 use NeedleProject\LaravelRabbitMq\PublisherInterface;
 use PhpAmqpLib\Channel\AMQPChannel;
@@ -384,6 +385,9 @@ class QueueEntity implements PublisherInterface, ConsumerInterface, LoggerAwareI
     {
         if (!($this->messageProcessor instanceof MessageProcessorInterface)) {
             $this->messageProcessor = app($this->messageProcessor);
+            if ($this->messageProcessor instanceof AbstractMessageProcessor) {
+                $this->messageProcessor->setLogger($this->logger);
+            }
         }
         return $this->messageProcessor;
     }
@@ -394,9 +398,9 @@ class QueueEntity implements PublisherInterface, ConsumerInterface, LoggerAwareI
      */
     public function consume(AMQPMessage $message)
     {
-        $this->logger->debug("Consumed message", [$message->getBody()]);
         try {
             $this->getMessageProcessor()->consume($message);
+            $this->logger->debug("Consumed message", [$message->getBody()]);
         } catch (\Throwable $e) {
             $this->logger->notice(
                 sprintf(
