@@ -286,7 +286,11 @@ class QueueEntity implements PublisherInterface, ConsumerInterface, LoggerAwareI
     public function stopConsuming()
     {
         $this->logger->debug("Stopping consumer!");
-        $this->getChannel()->basic_cancel($this->getConsumerTag(), false, true);
+        try {
+            $this->getChannel()->basic_cancel($this->getConsumerTag(), false, true);
+        } catch (\Throwable $e) {
+            $this->logger->notice("Got " . $e->getMessage() . " of type " . get_class($e));
+        }
     }
 
     /**

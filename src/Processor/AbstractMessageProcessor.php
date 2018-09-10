@@ -37,7 +37,7 @@ abstract class AbstractMessageProcessor implements MessageProcessorInterface, Lo
                 $message->delivery_info['channel']->basic_nack($message->delivery_info['delivery_tag'], false, true);
             }
         } catch (\Exception $e) {
-            $this->logger->notice(
+            $this->logger->error(
                 sprintf(
                     "Could not process message, got %s from %s in %d for message: %s",
                     $e->getMessage(),

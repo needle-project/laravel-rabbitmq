@@ -2,6 +2,8 @@
 namespace NeedleProject\LaravelRabbitMq;
 
 use PhpAmqpLib\Channel\AMQPChannel;
+use PhpAmqpLib\Connection\AbstractConnection;
+use PhpAmqpLib\Connection\AMQPSocketConnection;
 use PhpAmqpLib\Connection\AMQPStreamConnection;
 
 /**
@@ -26,9 +28,9 @@ class AMQPConnection
         'lazy'               => true,
 
         # More info about timeouts can be found on https://www.rabbitmq.com/networking.html
-        'read_write_timeout' => 8,   // default timeout for writing/reading (in seconds)
+        'read_write_timeout' => 16,   // default timeout for writing/reading (in seconds)
         'connect_timeout'    => 10,
-        'heartbeat'          => 4
+        'heartbeat'          => 8
     ];
 
     /**
@@ -42,7 +44,7 @@ class AMQPConnection
     protected $aliasName = '';
 
     /**
-     * @var null|AMQPStreamConnection
+     * @var null|AbstractConnection
      */
     private $connection = null;
 
@@ -91,12 +93,12 @@ class AMQPConnection
     }
 
     /**
-     * @return AMQPStreamConnection
+     * @return AbstractConnection
      */
-    protected function getConnection(): AMQPStreamConnection
+    protected function getConnection(): AbstractConnection
     {
         if (is_null($this->connection)) {
-            $this->connection = new AMQPStreamConnection(
+            $this->connection = new AMQPSocketConnection(
                 $this->connectionDetails['hostname'],
                 $this->connectionDetails['port'],
                 $this->connectionDetails['username'],
