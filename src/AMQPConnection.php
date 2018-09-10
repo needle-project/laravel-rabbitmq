@@ -28,9 +28,9 @@ class AMQPConnection
         'lazy'               => true,
 
         # More info about timeouts can be found on https://www.rabbitmq.com/networking.html
-        'read_write_timeout' => 16,   // default timeout for writing/reading (in seconds)
-        'connect_timeout'    => 10,
-        'heartbeat'          => 8
+        'read_write_timeout' => 3,   // default timeout for writing/reading (in seconds)
+        'connect_timeout'    => 3,
+        'heartbeat'          => 0
     ];
 
     /**
