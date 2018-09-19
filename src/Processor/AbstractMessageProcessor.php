@@ -40,7 +40,7 @@ abstract class AbstractMessageProcessor implements MessageProcessorInterface, Lo
             $this->logger->error(
                 sprintf(
                     "Could not process message, got %s from %s in %d for message: %s",
-                    $e->getMessage(),
+                    get_class($e) . '-' . $e->getMessage(),
                     (string)$e->getFile(),
                     (int)$e->getLine(),
                     (string)$message->getBody()
