@@ -2,6 +2,7 @@
 namespace NeedleProject\LaravelRabbitMq;
 
 use PhpAmqpLib\Channel\AMQPChannel;
+use PhpAmqpLib\Connection\AbstractConnection;
 use PhpAmqpLib\Connection\AMQPStreamConnection;
 use Tests\NeedleProject\LaravelRabbitMq\Stubs\ConnectionDetailsStub;
 use PHPUnit\Framework\TestCase;
@@ -19,9 +20,9 @@ class AMQPConnectionTest extends TestCase
         $this->assertEquals('guest', $details['password']);
         $this->assertEquals('/', $details['vhost']);
         $this->assertEquals(true, $details['lazy']);
-        $this->assertEquals(8, $details['read_write_timeout']);
-        $this->assertEquals(10, $details['connect_timeout']);
-        $this->assertEquals(4, $details['heartbeat']);
+        $this->assertEquals(3, $details['read_write_timeout']);
+        $this->assertEquals(3, $details['connect_timeout']);
+        $this->assertEquals(0, $details['heartbeat']);
     }
 
     public function testCreateWithAllDetails()
@@ -73,7 +74,7 @@ class AMQPConnectionTest extends TestCase
             ->disableOriginalConstructor()
             ->getMock();
 
-        $connectionMock = $this->getMockBuilder(AMQPStreamConnection::class)
+        $connectionMock = $this->getMockBuilder(AbstractConnection::class)
             ->disableOriginalConstructor()
             ->getMock();
 
@@ -101,9 +102,9 @@ class AMQPConnectionTest extends TestCase
             }
 
             /**
-             * @return AMQPStreamConnection
+             * @return AbstractConnection
              */
-            protected function getConnection(): AMQPStreamConnection
+            protected function getConnection(): AbstractConnection
             {
                 return $this->mock;
             }
@@ -142,12 +143,12 @@ class AMQPConnectionTest extends TestCase
             }
 
             /**
-             * @return AMQPStreamConnection
+             * @return AbstractConnection
              */
-            protected function getConnection(): AMQPStreamConnection
+            protected function getConnection(): AbstractConnection
             {
                 $this->tester->assertTrue(true);
-                return $this->tester->getMockBuilder(AMQPStreamConnection::class)
+                return $this->tester->getMockBuilder(AbstractConnection::class)
                     ->disableOriginalConstructor()
                     ->getMock();
             }
@@ -163,7 +164,7 @@ class AMQPConnectionTest extends TestCase
             ->method('close')
             ->willReturn(null);
 
-        $connectionMock = $this->getMockBuilder(AMQPStreamConnection::class)
+        $connectionMock = $this->getMockBuilder(AbstractConnection::class)
             ->disableOriginalConstructor()
             ->getMock();
 
@@ -176,7 +177,7 @@ class AMQPConnectionTest extends TestCase
 
         $amqpConnection = new class('foo', [], $connectionMock)  extends AMQPConnection {
             /**
-             * @var AMQPStreamConnection
+             * @var AbstractConnection
              */
             private $mock;
 
@@ -185,7 +186,7 @@ class AMQPConnectionTest extends TestCase
              *
              * @param string $aliasName
              * @param array $connectionDetails
-             * @param AMQPStreamConnection $mock
+             * @param AbstractConnection $mock
              */
             public function __construct($aliasName, array $connectionDetails = [], $mock = null)
             {
@@ -194,9 +195,9 @@ class AMQPConnectionTest extends TestCase
             }
 
             /**
-             * @return AMQPStreamConnection
+             * @return AbstractConnection
              */
-            protected function getConnection(): AMQPStreamConnection
+            protected function getConnection(): AbstractConnection
             {
                 return $this->mock;
             }

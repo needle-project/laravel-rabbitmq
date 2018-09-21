@@ -230,7 +230,6 @@ class QueueEntity implements PublisherInterface, ConsumerInterface, LoggerAwareI
                 $this->getConnection()->reconnect();
                 $this->setupChannelConsumer();
             } catch (\Throwable $e) {
-
                 // stop the consumer
                 $this->stopConsuming();
                 $this->logger->notice(sprintf(

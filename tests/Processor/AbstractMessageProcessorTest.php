@@ -4,6 +4,7 @@ namespace NeedleProject\LaravelRabbitMq\Processor;
 use PhpAmqpLib\Channel\AMQPChannel;
 use PhpAmqpLib\Message\AMQPMessage;
 use PHPUnit\Framework\TestCase;
+use Psr\Log\LoggerInterface;
 
 class AbstractMessageProcessorTest extends TestCase
 {
@@ -15,6 +16,10 @@ class AbstractMessageProcessorTest extends TestCase
                 return true;
             }
         };
+        $loggerMock = $this->getMockBuilder(LoggerInterface::class)
+            ->getMock();
+        $messageProcessor->setLogger($loggerMock);
+
 
         $channelMock = $this->getMockBuilder(AMQPChannel::class)
             ->disableOriginalConstructor()
@@ -42,6 +47,9 @@ class AbstractMessageProcessorTest extends TestCase
                 throw new \Exception('foo');
             }
         };
+        $loggerMock = $this->getMockBuilder(LoggerInterface::class)
+            ->getMock();
+        $messageProcessor->setLogger($loggerMock);
 
         $channelMock = $this->getMockBuilder(AMQPChannel::class)
             ->disableOriginalConstructor()
@@ -69,6 +77,9 @@ class AbstractMessageProcessorTest extends TestCase
                 return false;
             }
         };
+        $loggerMock = $this->getMockBuilder(LoggerInterface::class)
+            ->getMock();
+        $messageProcessor->setLogger($loggerMock);
 
         $channelMock = $this->getMockBuilder(AMQPChannel::class)
             ->disableOriginalConstructor()
@@ -96,6 +107,9 @@ class AbstractMessageProcessorTest extends TestCase
                 return true;
             }
         };
+        $loggerMock = $this->getMockBuilder(LoggerInterface::class)
+            ->getMock();
+        $messageProcessor->setLogger($loggerMock);
 
         $channelMock = $this->getMockBuilder(AMQPChannel::class)
             ->disableOriginalConstructor()

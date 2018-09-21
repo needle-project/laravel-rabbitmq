@@ -30,7 +30,8 @@ class AMQPConnection
         # More info about timeouts can be found on https://www.rabbitmq.com/networking.html
         'read_write_timeout' => 3,   // default timeout for writing/reading (in seconds)
         'connect_timeout'    => 3,
-        'heartbeat'          => 0
+        'heartbeat'          => 0,
+        'keep_alive'         => false
     ];
 
     /**
@@ -98,28 +99,49 @@ class AMQPConnection
     protected function getConnection(): AbstractConnection
     {
         if (is_null($this->connection)) {
-            $this->connection = new AMQPSocketConnection(
-                $this->connectionDetails['hostname'],
-                $this->connectionDetails['port'],
-                $this->connectionDetails['username'],
-                $this->connectionDetails['password'],
-                $this->connectionDetails['vhost'],
-                /** insist */
-                false,
-                /** login method */
-                'AMQPLAIN',
-                /** login_response */
-                null,
-                /** locale */
-                'en_US',
-                $this->connectionDetails['connect_timeout'],
-                $this->connectionDetails['read_write_timeout'],
-                null,
-                true,
-                $this->connectionDetails['heartbeat']
-            );
+            if (!isset($this->connection['type'])) {
+                $this->connection['type'] = AMQPStreamConnection::class;
+            }
+            switch ($this->connection['type']) {
+                case AMQPStreamConnection::class:
+                case 'stream':
+                    $type = AMQPStreamConnection::class;
+                    break;
+                default:
+                    $type = AMQPSocketConnection::class;
+            }
+
+            $this->connection = $this->createConnectionByType($type);
         }
         return $this->connection;
+    }
+
+    /**
+     * @param $type
+     * @return mixed
+     */
+    private function createConnectionByType($type)
+    {
+        return new $type(
+            $this->connectionDetails['hostname'],
+            $this->connectionDetails['port'],
+            $this->connectionDetails['username'],
+            $this->connectionDetails['password'],
+            $this->connectionDetails['vhost'],
+            /** insist */
+            false,
+            /** login method */
+            'AMQPLAIN',
+            /** login_response */
+            null,
+            /** locale */
+            'en_US',
+            $this->connectionDetails['connect_timeout'],
+            $this->connectionDetails['read_write_timeout'],
+            null,
+            $this->connectionDetails['keep_alive'],
+            $this->connectionDetails['heartbeat']
+        );
     }
 
     /**
