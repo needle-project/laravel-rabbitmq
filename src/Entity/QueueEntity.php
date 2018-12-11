@@ -352,8 +352,7 @@ class QueueEntity implements PublisherInterface, ConsumerInterface, LoggerAwareI
     {
         if (extension_loaded('pcntl')) {
             pcntl_signal(SIGTERM, [$this, 'catchKillSignal']);
-            pcntl_signal(SIGKILL, [$this, 'catchKillSignal']);
-            pcntl_signal(SIGSTOP, [$this, 'catchKillSignal']);
+            pcntl_signal(SIGINT, [$this, 'catchKillSignal']);
 
             if (function_exists('pcntl_signal_dispatch')) {
                 // let the signal go forward
