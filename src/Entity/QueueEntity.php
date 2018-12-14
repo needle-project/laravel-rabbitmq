@@ -348,7 +348,7 @@ class QueueEntity implements PublisherInterface, ConsumerInterface, LoggerAwareI
     /**
      * Register signals
      */
-    private function handleKillSignals()
+    protected function handleKillSignals()
     {
         if (extension_loaded('pcntl')) {
             pcntl_signal(SIGTERM, [$this, 'catchKillSignal']);
@@ -365,7 +365,7 @@ class QueueEntity implements PublisherInterface, ConsumerInterface, LoggerAwareI
      * Handle Kill Signals
      * @param int $signalNumber
      */
-    private function catchKillSignal(int $signalNumber)
+    protected function catchKillSignal(int $signalNumber)
     {
         $this->stopConsuming();
         $this->logger->debug(sprintf("Caught signal %d", $signalNumber));
