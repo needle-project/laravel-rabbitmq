@@ -5,6 +5,7 @@ use Illuminate\Foundation\Application;
 use Illuminate\Support\ServiceProvider as LaravelServiceProvider;
 use NeedleProject\LaravelRabbitMq\Builder\ContainerBuilder;
 use NeedleProject\LaravelRabbitMq\Command\BaseConsumerCommand;
+use NeedleProject\LaravelRabbitMq\Command\BasePublisherCommand;
 use NeedleProject\LaravelRabbitMq\Command\DeleteAllCommand;
 use NeedleProject\LaravelRabbitMq\Command\SetupCommand;
 use NeedleProject\LaravelRabbitMq\Command\ListEntitiesCommand;
@@ -131,7 +132,8 @@ class ServiceProvider extends LaravelServiceProvider
             SetupCommand::class,
             ListEntitiesCommand::class,
             BaseConsumerCommand::class,
-            DeleteAllCommand::class
+            DeleteAllCommand::class,
+            BasePublisherCommand::class
         ]);
     }
 }

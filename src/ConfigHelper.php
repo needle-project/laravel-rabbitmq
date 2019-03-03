@@ -5,7 +5,7 @@ namespace NeedleProject\LaravelRabbitMq;
  * Class ConfigHelper
  *
  * @package NeedleProject\LaravelRabbitMq
- * @author  Adrian Tilita <adrian.t@adoreme.com>
+ * @author  Adrian Tilita <adrian@tilita.ro>
  */
 class ConfigHelper
 {

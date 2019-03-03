@@ -2,9 +2,12 @@
 namespace NeedleProject\LaravelRabbitMq\Entity;
 
 use NeedleProject\LaravelRabbitMq\AMQPConnection;
+use NeedleProject\LaravelRabbitMq\Processor\MessageProcessorInterface;
 use PhpAmqpLib\Channel\AMQPChannel;
+use PhpAmqpLib\Exception\AMQPProtocolChannelException;
 use PhpAmqpLib\Message\AMQPMessage;
 use PHPUnit\Framework\TestCase;
+use Psr\Log\LoggerInterface;
 use Tests\NeedleProject\LaravelRabbitMq\Stubs\QueueEntityDetailsStub;
 
 class QueueEntityTest extends TestCase
@@ -31,12 +34,15 @@ class QueueEntityTest extends TestCase
 
         $this->assertEquals(
             [
-                'passive'   => false,
-                'durable'   => false,
-                'exclusive' => false,
-                'auto_delete' => false,
-                'internal'  => false,
-                'nowait'    => false,
+                'passive'                      => false,
+                'durable'                      => false,
+                'exclusive'                    => false,
+                'auto_delete'                  => false,
+                'internal'                     => false,
+                'nowait'                       => false,
+                'auto_create'                  => false,
+                'throw_exception_on_redeclare' => true,
+                'throw_exception_on_bind_fail' => true
             ],
             $queue->getAttributes()
         );
@@ -202,5 +208,180 @@ class QueueEntityTest extends TestCase
             ]
         );
         $queue->publish('a');
+    }
+
+    public function testCreateQueueWithExceptionSuppressing()
+    {
+        $amqpConnection = $this->getMockBuilder(AMQPConnection::class)
+            ->disableOriginalConstructor()
+            ->getMock();
+
+        $channelMock = $this->getMockBuilder(AMQPChannel::class)
+            ->disableOriginalConstructor()
+            ->getMock();
+
+        $amqpConnection->expects($this->once())
+            ->method('getChannel')
+            ->willReturn($channelMock);
+
+        $channelMock->expects($this->once())
+            ->method('queue_declare')
+            ->willThrowException(
+                new AMQPProtocolChannelException(406, 'Foo', [50,20])
+            );
+
+        $queue = QueueEntity::createQueue($amqpConnection, 'foo', [
+            'name' => 'queue.name.on.rabbit',
+            'throw_exception_on_redeclare' => false,
+        ]);
+        $queue->create();
+    }
+
+    public function testCreateQueueWithoutExceptionSuppressing()
+    {
+        $amqpConnection = $this->getMockBuilder(AMQPConnection::class)
+            ->disableOriginalConstructor()
+            ->getMock();
+
+        $channelMock = $this->getMockBuilder(AMQPChannel::class)
+            ->disableOriginalConstructor()
+            ->getMock();
+
+        $amqpConnection->expects($this->once())
+            ->method('getChannel')
+            ->willReturn($channelMock);
+
+        $channelMock->expects($this->once())
+            ->method('queue_declare')
+            ->willThrowException(
+                new AMQPProtocolChannelException(406, 'Foo', [50,20])
+            );
+
+        $queue = QueueEntity::createQueue($amqpConnection, 'foo', [
+            'name' => 'queue.name.on.rabbit',
+            'throw_exception_on_redeclare' => true,
+        ]);
+        $this->expectException(AMQPProtocolChannelException::class);
+        $queue->create();
+    }
+
+    public function testBindException()
+    {
+        $amqpConnection = $this->getMockBuilder(AMQPConnection::class)
+            ->disableOriginalConstructor()
+            ->getMock();
+
+        $channelMock = $this->getMockBuilder(AMQPChannel::class)
+            ->disableOriginalConstructor()
+            ->getMock();
+
+        $amqpConnection->expects($this->once())
+            ->method('getChannel')
+            ->willReturn($channelMock);
+
+        $channelMock->expects($this->once())
+            ->method('queue_bind')
+            ->willThrowException(
+                new AMQPProtocolChannelException(406, 'Foo', [50,20])
+            );
+
+        $queue = QueueEntity::createQueue($amqpConnection, 'foo', [
+            'name' => 'queue.name.on.rabbit',
+            'bind' => [
+                ['exchange' => 'foo.bar', 'routing_key' => '*']
+            ]
+        ]);
+        $this->expectException(AMQPProtocolChannelException::class);
+        $queue->bind();
+    }
+
+    public function testEmptyBind()
+    {
+        $amqpConnection = $this->getMockBuilder(AMQPConnection::class)
+            ->disableOriginalConstructor()
+            ->getMock();
+
+        $amqpConnection->expects($this->never())
+            ->method('getChannel')
+            ->willReturn(null);
+
+        $queue = QueueEntity::createQueue($amqpConnection, 'foo', [
+            'name' => 'queue.name.on.rabbit',
+            'bind' => []
+        ]);
+        $queue->bind();
+    }
+
+    public function testPublishWithAutoCreate()
+    {
+        $amqpConnection = $this->getMockBuilder(AMQPConnection::class)
+            ->disableOriginalConstructor()
+            ->getMock();
+
+        $channelMock = $this->getMockBuilder(AMQPChannel::class)
+            ->disableOriginalConstructor()
+            ->getMock();
+
+        $amqpConnection->expects($this->exactly(3))
+            ->method('getChannel')
+            ->willReturn($channelMock);
+
+        $channelMock->expects($this->once())
+            ->method('queue_declare')
+            ->willReturn(null);
+
+        $channelMock->expects($this->once())
+            ->method('queue_bind')
+            ->willReturn(null);
+
+        $channelMock->expects($this->once())
+            ->method('basic_publish')
+            ->willReturn(null);
+
+        $queue = QueueEntity::createQueue(
+            $amqpConnection,
+            'foo',
+            [
+                'name' => 'queue.name.on.rabbit',
+                'auto_create' => true,
+                'bind' => [['exchange' => 'foo', 'routing_key' => '*']]
+            ]
+        );
+        $queue->publish('a');
+    }
+
+    public function testProcessorCallback()
+    {
+        $amqpConnection = $this->getMockBuilder(AMQPConnection::class)
+            ->disableOriginalConstructor()
+            ->getMock();
+
+        $processorMock = $this->getMockBuilder(MessageProcessorInterface::class)
+            ->getMock();
+
+        $loggerMock = $this->getMockBuilder(LoggerInterface::class)
+            ->getMock();
+
+        $queue = QueueEntity::createQueue(
+            $amqpConnection,
+            'foo',
+            [
+                'name' => 'queue.name.on.rabbit',
+                'auto_create' => true,
+                'bind' => [['exchange' => 'foo', 'routing_key' => '*']]
+            ]
+        );
+        $queue->setLogger($loggerMock);
+
+        $class = new \ReflectionClass(get_class($queue));
+        $property = $class->getProperty('messageProcessor');
+        $property->setAccessible(true);
+        $property->setValue($queue, $processorMock);
+
+        $processorMock->expects($this->once())
+            ->method('consume')
+            ->willReturn(null);
+
+        $queue->consume(new AMQPMessage('FooBar'));
     }
 }

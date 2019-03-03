@@ -16,14 +16,17 @@ class BaseConsumerCommandTest extends TestCase
             ->getMock();
         $inputInterfaceMock = $this->getMockBuilder(InputInterface::class)
             ->getMock();
+        $outputInterfaceMock = $this->getMockBuilder(OutputInterface::class)
+            ->getMock();
 
-        $consumerCommand = new class($consumerMock, $inputInterfaceMock) extends BaseConsumerCommand {
+        $consumerCommand = new class($consumerMock, $inputInterfaceMock, $outputInterfaceMock) extends BaseConsumerCommand {
 
             private $consumerMock = null;
 
-            public function __construct($consumerMock, $inputInterfaceMock)
+            public function __construct($consumerMock, $inputInterfaceMock, $outputInterfaceMock)
             {
                 $this->input = $inputInterfaceMock;
+                $this->output = $outputInterfaceMock;
                 $this->consumerMock = $consumerMock;
             }
 

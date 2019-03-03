@@ -1,6 +1,8 @@
 <?php
 namespace NeedleProject\LaravelRabbitMq\Entity;
 
+use PhpAmqpLib\Channel\AbstractChannel;
+use PhpAmqpLib\Exception\AMQPProtocolChannelException;
 use PhpAmqpLib\Message\AMQPMessage;
 use PHPUnit\Framework\TestCase;
 use NeedleProject\LaravelRabbitMq\AMQPConnection;
@@ -30,12 +32,15 @@ class ExchangeEntityTest extends TestCase
         $exchange = ExchangeEntityDetailsStub::createExchange($amqpConnection, 'foo', []);
         $this->assertEquals(
             [
-                'exchange_type' => 'topic',
-                'passive'       => false,
-                'durable'       => false,
-                'auto_delete'   => false,
-                'internal'      => false,
-                'nowait'        => false
+                'exchange_type'                => 'topic',
+                'passive'                      => false,
+                'durable'                      => false,
+                'auto_delete'                  => false,
+                'internal'                     => false,
+                'nowait'                       => false,
+                'auto_create'                  => false,
+                'throw_exception_on_redeclare' => true,
+                'throw_exception_on_bind_fail' => true,
             ],
             $exchange->getAttributes()
         );
@@ -69,13 +74,13 @@ class ExchangeEntityTest extends TestCase
             ->willReturn(null);
 
         $exchange = ExchangeEntity::createExchange($amqpConnection, 'foo', [
-            'name' => 'exchange.name.on.rabbit',
+            'name'          => 'exchange.name.on.rabbit',
             'exchange_type' => 'an-exchange-type',
-            'passive'   => 'passive-value',
-            'durable'   => 'durable-value',
-            'auto_delete' => 'auto_delete-value',
-            'internal'  => 'internal-value',
-            'nowait'    => 'nowait-value',
+            'passive'       => 'passive-value',
+            'durable'       => 'durable-value',
+            'auto_delete'   => 'auto_delete-value',
+            'internal'      => 'internal-value',
+            'nowait'        => 'nowait-value',
         ]);
         $exchange->create();
     }
@@ -233,5 +238,120 @@ class ExchangeEntityTest extends TestCase
             ]
         );
         $exchange->publish('a', 'a-routing-key');
+    }
+
+    public function testCreateWithExceptionSuppressed()
+    {
+        $amqpConnection = $this->getMockBuilder(AMQPConnection::class)
+            ->disableOriginalConstructor()
+            ->getMock();
+
+        $channelMock = $this->getMockBuilder(AMQPChannel::class)
+            ->disableOriginalConstructor()
+            ->getMock();
+
+        $amqpConnection->expects($this->once())
+            ->method('getChannel')
+            ->willReturn($channelMock);
+
+        // Mocking the exception fails so we must reporduce a real one
+        AbstractChannel::$PROTOCOL_CONSTANTS_CLASS = 'PhpAmqpLib\Wire\Constants091';
+        $channelMock->expects($this->once())
+            ->method('exchange_declare')
+            ->willThrowException(
+                new AMQPProtocolChannelException(406, 'Foo', [50,20])
+            );
+
+        $amqpConnection->expects($this->once())
+            ->method('reconnect')
+            ->willReturn(null);
+
+        $exchange = ExchangeEntity::createExchange($amqpConnection, 'foo', [
+            'name'                         => 'exchange.name.on.rabbit',
+            'exchange_type'                => 'an-exchange-type',
+            'throw_exception_on_redeclare' => false,
+        ]);
+        $exchange->create();
+    }
+
+    public function testCreateWithExceptionNotSuppressed()
+    {
+        $amqpConnection = $this->getMockBuilder(AMQPConnection::class)
+            ->disableOriginalConstructor()
+            ->getMock();
+
+        $channelMock = $this->getMockBuilder(AMQPChannel::class)
+            ->disableOriginalConstructor()
+            ->getMock();
+
+        $amqpConnection->expects($this->once())
+            ->method('getChannel')
+            ->willReturn($channelMock);
+
+
+        // Mocking the exception fails so we must reporduce a real one
+        AbstractChannel::$PROTOCOL_CONSTANTS_CLASS = 'PhpAmqpLib\Wire\Constants091';
+        $channelMock->expects($this->once())
+            ->method('exchange_declare')
+            ->willThrowException(
+                new AMQPProtocolChannelException(406, 'Foo', [50,20])
+            );
+
+        $amqpConnection->expects($this->never())
+            ->method('reconnect')
+            ->willReturn(null);
+
+        $exchange = ExchangeEntity::createExchange($amqpConnection, 'foo', [
+            'name'                         => 'exchange.name.on.rabbit',
+            'exchange_type'                => 'an-exchange-type',
+            'throw_exception_on_redeclare' => true
+        ]);
+
+        $this->expectException(AMQPProtocolChannelException::class);
+        $exchange->create();
+    }
+
+    public function testPublishWithAutoCreate()
+    {
+        $amqpConnection = $this->getMockBuilder(AMQPConnection::class)
+            ->disableOriginalConstructor()
+            ->getMock();
+
+        $channelMock = $this->getMockBuilder(AMQPChannel::class)
+            ->disableOriginalConstructor()
+            ->getMock();
+
+        $amqpConnection->expects($this->exactly(3))
+            ->method('getChannel')
+            ->willReturn($channelMock);
+
+        $channelMock->expects($this->once())
+            ->method('exchange_declare')
+            ->willReturn(null);
+
+        $channelMock->expects($this->once())
+            ->method('queue_bind')
+            ->willReturn(null);
+
+        $channelMock->expects($this->once())
+            ->method('basic_publish')
+            ->with(
+                new AMQPMessage('a'),
+                'exchange.name.on.rabbit',
+                '',
+                true
+            )
+            ->willReturn(null);
+
+        $exchange = ExchangeEntity::createExchange(
+            $amqpConnection,
+            'foo',
+            [
+                'name' => 'exchange.name.on.rabbit',
+                'auto_create' => true,
+                'bind' => [['queue' => 'foo', 'routing_key' => '*']]
+            ]
+        );
+        $exchange->publish('a');
     }
 }

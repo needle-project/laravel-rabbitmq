@@ -4,6 +4,7 @@ namespace NeedleProject\LaravelRabbitMq\Entity;
 use NeedleProject\LaravelRabbitMq\AMQPConnection;
 use NeedleProject\LaravelRabbitMq\PublisherInterface;
 use PhpAmqpLib\Channel\AMQPChannel;
+use PhpAmqpLib\Exception\AMQPProtocolChannelException;
 use PhpAmqpLib\Message\AMQPMessage;
 
 /**
@@ -12,18 +13,21 @@ use PhpAmqpLib\Message\AMQPMessage;
  * @package NeedleProject\LaravelRabbitMq\Entity
  * @author  Adrian Tilita <adrian@tilita.ro>
  */
-class ExchangeEntity implements PublisherInterface
+class ExchangeEntity implements PublisherInterface, AMQPEntityInterface
 {
     /**
      * @const array Default connections parameters
      */
     const DEFAULTS = [
-        'exchange_type' => 'topic',
-        'passive'       => false,
-        'durable'       => false,
-        'auto_delete'   => false,
-        'internal'      => false,
-        'nowait'        => false
+        'exchange_type'                => 'topic',
+        'passive'                      => false,
+        'durable'                      => false,
+        'auto_delete'                  => false,
+        'internal'                     => false,
+        'nowait'                       => false,
+        'auto_create'                  => false,
+        'throw_exception_on_redeclare' => true,
+        'throw_exception_on_bind_fail' => true,
     ];
 
     /**
@@ -99,30 +103,50 @@ class ExchangeEntity implements PublisherInterface
      */
     public function create()
     {
-        $this->getChannel()
-            ->exchange_declare(
-                $this->attributes['name'],
-                $this->attributes['exchange_type'],
-                $this->attributes['passive'],
-                $this->attributes['durable'],
-                $this->attributes['auto_delete'],
-                $this->attributes['internal'],
-                $this->attributes['nowait']
-            );
+        try {
+            $this->getChannel()
+                ->exchange_declare(
+                    $this->attributes['name'],
+                    $this->attributes['exchange_type'],
+                    $this->attributes['passive'],
+                    $this->attributes['durable'],
+                    $this->attributes['auto_delete'],
+                    $this->attributes['internal'],
+                    $this->attributes['nowait']
+                );
+        } catch (AMQPProtocolChannelException $e) {
+            // 406 is a soft error triggered for precondition failure (when redeclaring with different parameters)
+            if (true === $this->attributes['throw_exception_on_redeclare'] || $e->amqp_reply_code !== 406) {
+                throw $e;
+            }
+            // a failure trigger channels closing process
+            $this->getConnection()->reconnect();
+        }
     }
 
+    /**
+     * @throws AMQPProtocolChannelException
+     */
     public function bind()
     {
-        if (!isset($this->attributes['bind'])) {
+        if (!isset($this->attributes['bind']) || empty($this->attributes['bind'])) {
             return;
         }
         foreach ($this->attributes['bind'] as $bindItem) {
-            $this->getChannel()
-                ->queue_bind(
-                    $bindItem['queue'],
-                    $this->attributes['name'],
-                    $bindItem['routing_key']
-                );
+            try {
+                $this->getChannel()
+                    ->queue_bind(
+                        $bindItem['queue'],
+                        $this->attributes['name'],
+                        $bindItem['routing_key']
+                    );
+            } catch (AMQPProtocolChannelException $e) {
+                // 404 is the code for trying to bind to an non-existing entity
+                if (true === $this->attributes['throw_exception_on_bind_fail'] || $e->amqp_reply_code !== 404) {
+                    throw $e;
+                }
+                $this->getConnection()->reconnect();
+            }
         }
     }
 
@@ -139,10 +163,15 @@ class ExchangeEntity implements PublisherInterface
      *
      * @param string $message
      * @param string $routingKey
-     * @return void
+     * @return mixed|void
+     * @throws AMQPProtocolChannelException
      */
     public function publish(string $message, string $routingKey = '')
     {
+        if ($this->attributes['auto_create'] === true) {
+            $this->create();
+            $this->bind();
+        }
         $this->getChannel()->basic_publish(
             new AMQPMessage($message),
             $this->attributes['name'],

@@ -7,6 +7,7 @@ use NeedleProject\LaravelRabbitMq\Processor\AbstractMessageProcessor;
 use NeedleProject\LaravelRabbitMq\Processor\MessageProcessorInterface;
 use NeedleProject\LaravelRabbitMq\PublisherInterface;
 use PhpAmqpLib\Channel\AMQPChannel;
+use PhpAmqpLib\Exception\AMQPProtocolChannelException;
 use PhpAmqpLib\Exception\AMQPTimeoutException;
 use PhpAmqpLib\Message\AMQPMessage;
 use Psr\Log\LoggerAwareInterface;
@@ -18,7 +19,7 @@ use Psr\Log\LoggerAwareTrait;
  * @package NeedleProject\LaravelRabbitMq\Entity
  * @author  Adrian Tilita <adrian@tilita.ro>
  */
-class QueueEntity implements PublisherInterface, ConsumerInterface, LoggerAwareInterface
+class QueueEntity implements PublisherInterface, ConsumerInterface, AMQPEntityInterface, LoggerAwareInterface
 {
     use LoggerAwareTrait;
 
@@ -26,12 +27,15 @@ class QueueEntity implements PublisherInterface, ConsumerInterface, LoggerAwareI
      * @const array Default connections parameters
      */
     const DEFAULTS = [
-        'passive'   => false,
-        'durable'   => false,
-        'exclusive' => false,
-        'auto_delete' => false,
-        'internal'  => false,
-        'nowait'    => false,
+        'passive'                      => false,
+        'durable'                      => false,
+        'exclusive'                    => false,
+        'auto_delete'                  => false,
+        'internal'                     => false,
+        'nowait'                       => false,
+        'auto_create'                  => false,
+        'throw_exception_on_redeclare' => true,
+        'throw_exception_on_bind_fail' => true,
     ];
 
     /**
@@ -157,28 +161,46 @@ class QueueEntity implements PublisherInterface, ConsumerInterface, LoggerAwareI
      */
     public function create()
     {
-        $this->getChannel()
-            ->queue_declare(
-                $this->attributes['name'],
-                $this->attributes['passive'],
-                $this->attributes['durable'],
-                $this->attributes['exclusive'],
-                $this->attributes['auto_delete'],
-                $this->attributes['internal'],
-                $this->attributes['nowait']
-            );
+        try {
+            $this->getChannel()
+                ->queue_declare(
+                    $this->attributes['name'],
+                    $this->attributes['passive'],
+                    $this->attributes['durable'],
+                    $this->attributes['exclusive'],
+                    $this->attributes['auto_delete'],
+                    $this->attributes['internal'],
+                    $this->attributes['nowait']
+                );
+        } catch (AMQPProtocolChannelException $e) {
+            // 406 is a soft error triggered for precondition failure (when redeclaring with different parameters)
+            if (true === $this->attributes['throw_exception_on_redeclare'] || $e->amqp_reply_code !== 406) {
+                throw $e;
+            }
+            // a failure trigger channels closing process
+            $this->getConnection()->reconnect();
+        }
     }
 
     public function bind()
     {
-        if (isset($this->attributes['bind'])) {
-            foreach ($this->attributes['bind'] as $bindItem) {
+        if (!isset($this->attributes['bind']) || empty($this->attributes['bind'])) {
+            return;
+        }
+        foreach ($this->attributes['bind'] as $bindItem) {
+            try {
                 $this->getChannel()
                     ->queue_bind(
                         $this->attributes['name'],
                         $bindItem['exchange'],
                         $bindItem['routing_key']
                     );
+            } catch (AMQPProtocolChannelException $e) {
+                // 404 is the code for trying to bind to an non-existing entity
+                if (true === $this->attributes['throw_exception_on_bind_fail'] || $e->amqp_reply_code !== 404) {
+                    throw $e;
+                }
+                $this->getConnection()->reconnect();
             }
         }
     }
@@ -191,16 +213,20 @@ class QueueEntity implements PublisherInterface, ConsumerInterface, LoggerAwareI
         $this->getChannel()->queue_delete($this->attributes['name']);
     }
 
-
     /**
      * Publish a message
      *
      * @param string $message
      * @param string $routingKey
-     * @return void
+     * @return mixed|void
+     * @throws AMQPProtocolChannelException
      */
     public function publish(string $message, string $routingKey = '')
     {
+        if ($this->attributes['auto_create'] === true) {
+            $this->create();
+            $this->bind();
+        }
         $this->getChannel()
             ->basic_publish(
                 new AMQPMessage($message),
@@ -225,7 +251,6 @@ class QueueEntity implements PublisherInterface, ConsumerInterface, LoggerAwareI
             try {
                 $this->getChannel()->wait(null, false, 1);
             } catch (AMQPTimeoutException $e) {
-                $this->logger->debug("Timeout exceeded, reconnecting!");
                 usleep(1000);
                 $this->getConnection()->reconnect();
                 $this->setupChannelConsumer();
@@ -285,7 +310,6 @@ class QueueEntity implements PublisherInterface, ConsumerInterface, LoggerAwareI
      */
     public function stopConsuming()
     {
-        $this->logger->debug("Stopping consumer!");
         try {
             $this->getChannel()->basic_cancel($this->getConsumerTag(), false, true);
         } catch (\Throwable $e) {
@@ -316,6 +340,11 @@ class QueueEntity implements PublisherInterface, ConsumerInterface, LoggerAwareI
 
     private function setupChannelConsumer()
     {
+        if ($this->attributes['auto_create'] === true) {
+            $this->create();
+            $this->bind();
+        }
+
         $this->getChannel()
             ->basic_qos(null, $this->prefetchCount, true);
 
@@ -365,7 +394,7 @@ class QueueEntity implements PublisherInterface, ConsumerInterface, LoggerAwareI
      * Handle Kill Signals
      * @param int $signalNumber
      */
-    protected function catchKillSignal(int $signalNumber)
+    public function catchKillSignal(int $signalNumber)
     {
         $this->stopConsuming();
         $this->logger->debug(sprintf("Caught signal %d", $signalNumber));

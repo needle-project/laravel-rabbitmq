@@ -2,7 +2,9 @@
 namespace NeedleProject\LaravelRabbitMq\Command;
 
 use Illuminate\Console\Command;
+use NeedleProject\LaravelRabbitMq\ConsumerInterface;
 use NeedleProject\LaravelRabbitMq\Container;
+use NeedleProject\LaravelRabbitMq\Entity\AMQPEntityInterface;
 use NeedleProject\LaravelRabbitMq\Entity\ExchangeEntity;
 use NeedleProject\LaravelRabbitMq\Entity\QueueEntity;
 
@@ -19,7 +21,7 @@ class SetupCommand extends Command
      *
      * @var string
      */
-    protected $signature = 'rabbitmq:setup';
+    protected $signature = 'rabbitmq:setup {--force}';
 
     /**
      * The console command description.
@@ -46,14 +48,46 @@ class SetupCommand extends Command
     }
 
     /**
+     * @param $entity
+     * @param string $type
+     * @param bool $forceRecreate
+     */
+    private function createEntity(
+        AMQPEntityInterface $entity,
+        string $type,
+        string $resourceName,
+        bool $forceRecreate = false
+    ) {
+        try {
+            $entity->create();
+            $this->output->writeln(
+                sprintf(
+                    "Created <info>%s</info> <fg=yellow>%s</> for %s [<fg=yellow>%s</>]",
+                    (string)($entity instanceof QueueEntity) ? 'QUEUE' : 'EXCHANGE',
+                    (string)$entity->getAliasName(),
+                    (string)$type,
+                    (string)$resourceName
+                )
+            );
+        } catch (\Throwable $e) {
+            dump($e->getMessage());
+            dump(get_class($e));
+        }
+    }
+
+    /**
      * Execute the console command.
      */
     public function handle()
     {
+        $forceRecreate = $this->input->getOption('force');
+
         $hasErrors = false;
         /** @var QueueEntity|ExchangeEntity $entity */
         foreach ($this->container->getPublishers() as $publisherName => $entity) {
-            try {
+            $this->createEntity($entity, 'publisher', $publisherName, $forceRecreate);
+
+            /*try {
                 $entity->create();
                 $this->output->writeln(
                     sprintf(
@@ -72,8 +106,9 @@ class SetupCommand extends Command
                         (string)$e->getMessage()
                     )
                 );
-            }
+            }*/
         }
+        die();
 
         /** @var ConsumerInterface $entity */
         foreach ($this->container->getConsumers() as $consumerAliasName => $entity) {

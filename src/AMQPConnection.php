@@ -10,7 +10,7 @@ use PhpAmqpLib\Connection\AMQPStreamConnection;
  * Class AMQPConnection
  *
  * @package NeedleProject\LaravelRabbitMq
- * @author  Adrian Tilita <adrian.t@adoreme.com>
+ * @author  Adrian Tilita <adrian@tilita.ro>
  */
 class AMQPConnection
 {
@@ -28,10 +28,10 @@ class AMQPConnection
         'lazy'               => true,
 
         # More info about timeouts can be found on https://www.rabbitmq.com/networking.html
-        'read_write_timeout' => 3,   // default timeout for writing/reading (in seconds)
-        'connect_timeout'    => 3,
-        'heartbeat'          => 0,
-        'keep_alive'         => false
+        'read_write_timeout'   => 3,   // default timeout for writing/reading (in seconds)
+        'connect_timeout'      => 3,
+        'heartbeat'            => 0,
+        'keep_alive'           => false
     ];
 
     /**
