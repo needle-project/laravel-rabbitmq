@@ -7,6 +7,7 @@ use NeedleProject\LaravelRabbitMq\Container;
 use NeedleProject\LaravelRabbitMq\Entity\AMQPEntityInterface;
 use NeedleProject\LaravelRabbitMq\Entity\ExchangeEntity;
 use NeedleProject\LaravelRabbitMq\Entity\QueueEntity;
+use PhpAmqpLib\Exception\AMQPProtocolChannelException;
 
 /**
  * Class SetupCommand
@@ -48,8 +49,9 @@ class SetupCommand extends Command
     }
 
     /**
-     * @param $entity
+     * @param AMQPEntityInterface $entity
      * @param string $type
+     * @param string $resourceName
      * @param bool $forceRecreate
      */
     private function createEntity(
@@ -58,21 +60,27 @@ class SetupCommand extends Command
         string $resourceName,
         bool $forceRecreate = false
     ) {
-        try {
-            $entity->create();
+        if (true === $forceRecreate) {
             $this->output->writeln(
                 sprintf(
-                    "Created <info>%s</info> <fg=yellow>%s</> for %s [<fg=yellow>%s</>]",
+                    "Deleting <info>%s</info> <fg=yellow>%s</>",
                     (string)($entity instanceof QueueEntity) ? 'QUEUE' : 'EXCHANGE',
-                    (string)$entity->getAliasName(),
-                    (string)$type,
-                    (string)$resourceName
+                    (string)$entity->getAliasName()
                 )
             );
-        } catch (\Throwable $e) {
-            dump($e->getMessage());
-            dump(get_class($e));
+            $entity->delete();
         }
+
+        $entity->create();
+        $this->output->writeln(
+            sprintf(
+                "Created <info>%s</info> <fg=yellow>%s</> for %s [<fg=yellow>%s</>]",
+                (string)($entity instanceof QueueEntity) ? 'QUEUE' : 'EXCHANGE',
+                (string)$entity->getAliasName(),
+                (string)$type,
+                (string)$resourceName
+            )
+        );
     }
 
     /**
@@ -85,18 +93,9 @@ class SetupCommand extends Command
         $hasErrors = false;
         /** @var QueueEntity|ExchangeEntity $entity */
         foreach ($this->container->getPublishers() as $publisherName => $entity) {
-            $this->createEntity($entity, 'publisher', $publisherName, $forceRecreate);
-
-            /*try {
-                $entity->create();
-                $this->output->writeln(
-                    sprintf(
-                        "Created entity <info>%s</info> for publisher [<fg=yellow>%s</>]",
-                        (string)$entity->getAliasName(),
-                        (string)$publisherName
-                    )
-                );
-            } catch (\Exception $e) {
+            try {
+                $this->createEntity($entity, 'publisher', $publisherName, $forceRecreate);
+            } catch (AMQPProtocolChannelException $e) {
                 $hasErrors = true;
                 $this->output->error(
                     sprintf(
@@ -106,35 +105,29 @@ class SetupCommand extends Command
                         (string)$e->getMessage()
                     )
                 );
-            }*/
+                // @todo Fix type mismatch
+                $entity->getConnection()->reconnect();
+            }
         }
-        die();
 
-        /** @var ConsumerInterface $entity */
-        foreach ($this->container->getConsumers() as $consumerAliasName => $entity) {
+        /** @var QueueEntity|ExchangeEntity $entity */
+        foreach ($this->container->getConsumers() as $publisherName => $entity) {
             try {
-                /** @var QueueEntity $entity */
-                $entity->create();
-                $this->output->writeln(
-                    sprintf(
-                        "Created entity <info>%s</info> for consumer [<fg=yellow>%s</>]",
-                        (string)$entity->getAliasName(),
-                        (string)$consumerAliasName
-                    )
-                );
-            } catch (\Exception $e) {
+                $this->createEntity($entity, 'consumer', $publisherName, $forceRecreate);
+            } catch (AMQPProtocolChannelException $e) {
                 $hasErrors = true;
                 $this->output->error(
                     sprintf(
                         "Could not create entity %s for consumer [%s], got:\n%s",
                         (string)$entity->getAliasName(),
-                        (string)$consumerAliasName,
+                        (string)$publisherName,
                         (string)$e->getMessage()
                     )
                 );
+                // @todo Fix type mismatch
+                $entity->getConnection()->reconnect();
             }
         }
-
 
         $this->output->block("Create binds");
         /** @var PublisherInterface $entity */
