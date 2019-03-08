@@ -61,7 +61,7 @@ return [
 The configuration files has 5 main nodes: **connections**, **exchanges**,  **queues**, **publishers**, **consumers**.
 
 They are used in the following mode:
-![Configuration Flow](https://raw.githubusercontent.com/needle-project/laravel-rabbitmq/documentation/docs/configuration_diagram.png)
+![Configuration Flow](docs/configuration_diagram.png)
 
 Example config:
 ```php
