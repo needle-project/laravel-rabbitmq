@@ -7,19 +7,30 @@
 A simple rabbitmq library for laravel based on Publish–Subscribe pattern where the subscriber is the Consumer.
 
 # Table of Contents
-1. [Install](#install)
-2. [Configure](#configure)
-	2.1. [Connections](#connection)
-	2.2. [Queues](#queues)
-	2.3. [Exchanges](#exchanges)
-	2.4. [Publishers](#publishers)
-	2.5. [Consumers](#consumers)
-3. [Usage](#usage)
-	3.1. [Publishing a message](#publishing_a_message)
-	3.2. [Consuming a message](#consuming_a_message)
-	3.3. [Available CLI commands](#available_commands)
-	3.4. [Custom Message Processor](#custom_message_processor)
-4. [Contribute](#contribute)
+1. [Install](#1-install)
+2. [Configure](#2-configure)
+
+    2.1. [Connections](#21-connection)
+
+    2.2. [Queues](#22-queues)
+
+	2.3. [Exchanges](#23-exchanges)
+
+	2.4. [Publishers](#24-publishers)
+
+	2.5. [Consumers](#25-consumers)
+
+3. [Usage](#3-usage) 
+
+	3.1. [Publishing a message](#31-publishing-a-message)
+
+	3.2. [Consuming a message](#32-consuming-a-message)
+
+	3.3. [Available CLI commands](#33-available-commands)
+
+	3.4. [Custom Message Processor](#34-custom-message-processor)
+
+4. [Contribute](#4-contribute)
 
 # 1. Install
 Run: 
@@ -50,7 +61,7 @@ return [
 The configuration files has 5 main nodes: **connections**, **exchanges**,  **queues**, **publishers**, **consumers**.
 
 They are used in the following mode:
-![Configuration Flow](https://raw.githubusercontent.com/needle-project/laravel-rabbitmq/documentation/docs/configuration_diagram.svg)
+![Configuration Flow](https://raw.githubusercontent.com/needle-project/laravel-rabbitmq/documentation/docs/configuration_diagram.png)
 
 Example config:
 ```php
@@ -148,7 +159,6 @@ Node key  | Type | Description
 ------------- | ------------- | -------------
 connection | string | The reference to the connection that should be used.
 name | string | The actual name of the queue on RabbitMQ
- (https://www.rabbitmq.com/tutorials/amqp-concepts.html)
 attributes | array | Optional attributes for the exchange
 
 *Exchange attributes*
@@ -200,7 +210,7 @@ Define a consumer:
 Field  | Type | Description
 ------------- | ------------- | -------------
 queue | string | Reference of the defined queue block.
-prefetch_count | int | *Default: 1*. The number of the message that 
+prefetch_count | int | *Default: 1*. The number of the message that a cosumer will grab without ack. Read more [here](https://www.rabbitmq.com/consumer-prefetch.html)
 passive | boolean | false | This is an AMQP attribute. Read about [here] (https://www.rabbitmq.com/amqp-0-9-1-reference.html)
 durable | boolean | false | Same as passive attribute
 auto_delete | boolean | false | Same as passive attribute
