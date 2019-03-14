@@ -30,4 +30,9 @@ interface AMQPEntityInterface
      * @return string
      */
     public function getAliasName();
+
+    /**
+     * Reconnect the entity
+     */
+    public function reconnect();
 }

@@ -105,8 +105,7 @@ class SetupCommand extends Command
                         (string)$e->getMessage()
                     )
                 );
-                // @todo Fix type mismatch
-                $entity->getConnection()->reconnect();
+                $entity->reconnect();
             }
         }
 
@@ -124,8 +123,7 @@ class SetupCommand extends Command
                         (string)$e->getMessage()
                     )
                 );
-                // @todo Fix type mismatch
-                $entity->getConnection()->reconnect();
+                $entity->reconnect();
             }
         }
 

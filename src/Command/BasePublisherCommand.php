@@ -15,7 +15,7 @@ use Symfony\Component\Console\Output\OutputInterface;
  * Class BasePublisherCommand
  *
  * @package NeedleProject\LaravelRabbitMq\Command
- * @author  Adrian Tilita <adrian.t@adoreme.com>
+ * @author  Adrian Tilita <adrian@tilita.ro>
  */
 class BasePublisherCommand extends Command
 {

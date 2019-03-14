@@ -27,14 +27,25 @@ class QueueEntity implements PublisherInterface, ConsumerInterface, AMQPEntityIn
      * @const array Default connections parameters
      */
     const DEFAULTS = [
+        // Whether to check if it exists or to verify existance using argument types (Throws PRECONDITION_FAILED)
         'passive'                      => false,
+        // Entities with durable will be re-created uppon server restart
         'durable'                      => false,
+        // whether to use it by only one channel, then it gets deleted
         'exclusive'                    => false,
+        // Whether to delete it when the queue has no event on it
         'auto_delete'                  => false,
+        // Whether the exchange can be used by a publisher or block it (declared just for internal "wiring")
         'internal'                     => false,
+        // Whether to receive a Declare confirmation
         'nowait'                       => false,
+        // Whether to auto create the entity before publishing/consuming it
         'auto_create'                  => false,
+        // whether to "hide" the exception on re-declare.
+        // if the `passive` filter is set true, this is redundant
         'throw_exception_on_redeclare' => true,
+        // whether to throw on exception when trying to
+        // bind to an in-existent queue/exchange
         'throw_exception_on_bind_fail' => true,
     ];
 
@@ -178,7 +189,7 @@ class QueueEntity implements PublisherInterface, ConsumerInterface, AMQPEntityIn
                 throw $e;
             }
             // a failure trigger channels closing process
-            $this->getConnection()->reconnect();
+            $this->reconnect();
         }
     }
 
@@ -200,7 +211,7 @@ class QueueEntity implements PublisherInterface, ConsumerInterface, AMQPEntityIn
                 if (true === $this->attributes['throw_exception_on_bind_fail'] || $e->amqp_reply_code !== 404) {
                     throw $e;
                 }
-                $this->getConnection()->reconnect();
+                $this->reconnect();
             }
         }
     }
@@ -211,6 +222,14 @@ class QueueEntity implements PublisherInterface, ConsumerInterface, AMQPEntityIn
     public function delete()
     {
         $this->getChannel()->queue_delete($this->attributes['name']);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function reconnect()
+    {
+        $this->getConnection()->reconnect();
     }
 
     /**

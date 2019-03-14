@@ -20,13 +20,23 @@ class ExchangeEntity implements PublisherInterface, AMQPEntityInterface
      */
     const DEFAULTS = [
         'exchange_type'                => 'topic',
+        // Whether to check if it exists or to verify existance using argument types (Throws PRECONDITION_FAILED)
         'passive'                      => false,
+        // Entities with durable will be re-created uppon server restart
         'durable'                      => false,
+        // Whether to delete it when no queues ar bind to it
         'auto_delete'                  => false,
+        // Whether the exchange can be used by a publisher or block it (declared just for internal "wiring")
         'internal'                     => false,
+        // Whether to receive a Declare confirmation
         'nowait'                       => false,
+        // Whether to auto create the entity before publishing/consuming it
         'auto_create'                  => false,
+        // whether to "hide" the exception on re-declare.
+        // if the `passive` filter is set true, this is redundant
         'throw_exception_on_redeclare' => true,
+        // whether to throw on exception when trying to
+        // bind to an in-existent queue/exchange
         'throw_exception_on_bind_fail' => true,
     ];
 
@@ -156,6 +166,14 @@ class ExchangeEntity implements PublisherInterface, AMQPEntityInterface
     public function delete()
     {
         $this->getChannel()->exchange_delete($this->attributes['name']);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function reconnect()
+    {
+        $this->getConnection()->reconnect();
     }
 
     /**
