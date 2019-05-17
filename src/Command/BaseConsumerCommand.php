@@ -56,7 +56,7 @@ class BaseConsumerCommand extends Command
 
         /** @var ConsumerInterface $consumer */
         $consumer = $this->getConsumer($this->input->getArgument('consumer'));
-        if ($consumer instanceof LoggerAwareInterface) {
+        if ($consumer instanceof LoggerAwareInterface && $isVerbose) {
             try {
                 $this->injectCliLogger($consumer);
             } catch (\Throwable $e) {
