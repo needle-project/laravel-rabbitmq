@@ -12,6 +12,7 @@ use PhpAmqpLib\Exception\AMQPTimeoutException;
 use PhpAmqpLib\Message\AMQPMessage;
 use Psr\Log\LoggerAwareInterface;
 use Psr\Log\LoggerAwareTrait;
+use PhpAmqpLib\Exception\AMQPChannelClosedException;
 
 /**
  * Class QueueEntity
@@ -22,6 +23,11 @@ use Psr\Log\LoggerAwareTrait;
 class QueueEntity implements PublisherInterface, ConsumerInterface, AMQPEntityInterface, LoggerAwareInterface
 {
     use LoggerAwareTrait;
+
+    /**
+     * @const int   Retry count when a Channel Closed exeption is thrown
+     */
+    const MAX_RETRIES = 3;
 
     /**
      * @const array Default connections parameters
@@ -93,6 +99,11 @@ class QueueEntity implements PublisherInterface, ConsumerInterface, AMQPEntityIn
      * @var double
      */
     protected $startTime = 0;
+
+    /**
+     * @var int
+     */
+    protected $retryCount = 0;
 
     /**
      * @param AMQPConnection $connection
@@ -246,13 +257,26 @@ class QueueEntity implements PublisherInterface, ConsumerInterface, AMQPEntityIn
             $this->create();
             $this->bind();
         }
-        $this->getChannel()
-            ->basic_publish(
-                new AMQPMessage($message),
-                '',
-                $this->attributes['name'],
-                true
-            );
+
+        try {
+            $this->getChannel()
+                ->basic_publish(
+                    new AMQPMessage($message),
+                    '',
+                    $this->attributes['name'],
+                    true
+                );
+            $this->retryCount = 0;
+        } catch (AMQPChannelClosedException $exception) {
+            $this->retryCount++;
+            // Retry publishing with re-connect
+            if ($this->retryCount < self::MAX_RETRIES) {
+                $this->getConnection()->reconnect();
+                $this->publish($message, $routingKey);
+                return;
+            }
+            throw $exception;
+        }
     }
 
     /**

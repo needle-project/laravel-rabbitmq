@@ -4,6 +4,7 @@ namespace NeedleProject\LaravelRabbitMq\Entity;
 use NeedleProject\LaravelRabbitMq\AMQPConnection;
 use NeedleProject\LaravelRabbitMq\PublisherInterface;
 use PhpAmqpLib\Channel\AMQPChannel;
+use PhpAmqpLib\Exception\AMQPChannelClosedException;
 use PhpAmqpLib\Exception\AMQPProtocolChannelException;
 use PhpAmqpLib\Message\AMQPMessage;
 
@@ -15,6 +16,11 @@ use PhpAmqpLib\Message\AMQPMessage;
  */
 class ExchangeEntity implements PublisherInterface, AMQPEntityInterface
 {
+    /**
+     * @const int   Retry count when a Channel Closed exeption is thrown
+     */
+    const MAX_RETRIES = 3;
+
     /**
      * @const array Default connections parameters
      */
@@ -54,6 +60,11 @@ class ExchangeEntity implements PublisherInterface, AMQPEntityInterface
      * @var array
      */
     protected $attributes;
+
+    /**
+     * @var int 
+     */
+    protected $retryCount = 0;
 
     /**
      * ExchangeEntity constructor.
@@ -190,11 +201,23 @@ class ExchangeEntity implements PublisherInterface, AMQPEntityInterface
             $this->create();
             $this->bind();
         }
-        $this->getChannel()->basic_publish(
-            new AMQPMessage($message),
-            $this->attributes['name'],
-            $routingKey,
-            true
-        );
+        try {
+            $this->getChannel()->basic_publish(
+                new AMQPMessage($message),
+                $this->attributes['name'],
+                $routingKey,
+                true
+            );
+            $this->retryCount = 0;
+        } catch (AMQPChannelClosedException $exception) {
+            $this->retryCount++;
+            // Retry publishing with re-connect
+            if ($this->retryCount < self::MAX_RETRIES) {
+                $this->getConnection()->reconnect();
+                $this->publish($message, $routingKey);
+                return;
+            }
+            throw $exception;
+        }
     }
 }

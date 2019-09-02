@@ -8,6 +8,7 @@ use PHPUnit\Framework\TestCase;
 use NeedleProject\LaravelRabbitMq\AMQPConnection;
 use PhpAmqpLib\Channel\AMQPChannel;
 use Tests\NeedleProject\LaravelRabbitMq\Stubs\ExchangeEntityDetailsStub;
+use PhpAmqpLib\Exception\AMQPChannelClosedException;
 
 class ExchangeEntityTest extends TestCase
 {
@@ -353,5 +354,83 @@ class ExchangeEntityTest extends TestCase
             ]
         );
         $exchange->publish('a');
+    }
+
+
+    public function testPublishRetry()
+    {
+        $amqpConnection = $this->getMockBuilder(AMQPConnection::class)
+            ->disableOriginalConstructor()
+            ->getMock();
+
+        $channelMock = $this->getMockBuilder(AMQPChannel::class)
+            ->disableOriginalConstructor()
+            ->getMock();
+
+        $amqpConnection->expects($this->atLeastOnce())
+            ->method('getChannel')
+            ->willReturn($channelMock);
+
+        $amqpConnection->expects($this->atLeastOnce())
+            ->method('reconnect')
+            ->willReturn($channelMock);
+
+        $retries = 0;
+        $channelMock->expects($this->exactly(2))
+            ->method('basic_publish')
+            ->will($this->returnCallback(function ($args) use (&$retries) {
+                if (0 === $retries) {
+                    $retries++;
+                    throw new AMQPChannelClosedException("Channel is Closed");
+                }
+                return null;
+            }));
+
+        $queue = ExchangeEntity::createExchange(
+            $amqpConnection,
+            'foo',
+            [
+                'name' => 'exchange.name.on.rabbit',
+                'auto_create' => true,
+                'bind' => [['queue' => 'foo', 'routing_key' => '*']]
+            ]
+        );
+        $queue->publish('a');
+        $this->assertEquals(1, $retries);
+    }
+
+    public function testPublishMaxRetry()
+    {
+        $amqpConnection = $this->getMockBuilder(AMQPConnection::class)
+            ->disableOriginalConstructor()
+            ->getMock();
+
+        $channelMock = $this->getMockBuilder(AMQPChannel::class)
+            ->disableOriginalConstructor()
+            ->getMock();
+
+        $amqpConnection->expects($this->atLeastOnce())
+            ->method('getChannel')
+            ->willReturn($channelMock);
+
+        $amqpConnection->expects($this->atLeastOnce())
+            ->method('reconnect')
+            ->willReturn($channelMock);
+
+        $channelMock->expects($this->exactly(3))
+            ->method('basic_publish')
+            ->will($this->throwException(new AMQPChannelClosedException("Channel is Closed")));
+
+        $queue = ExchangeEntity::createExchange(
+            $amqpConnection,
+            'foo',
+            [
+                'name' => 'exchange.name.on.rabbit',
+                'auto_create' => true,
+                'bind' => [['queue' => 'foo', 'routing_key' => '*']]
+            ]
+        );
+        $this->expectException(AMQPChannelClosedException::class);
+        $queue->publish('a');
     }
 }
