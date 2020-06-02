@@ -33,17 +33,25 @@ class ServiceProvider extends LaravelServiceProvider
     protected $defer = false;
 
     /**
+     * Register services.
+     *
+     * @return void
+     */
+    public function register()
+    {
+        $this->registerContainer();
+        $this->registerPublishers();
+        $this->registerConsumers();
+    }
+
+    /**
      * Perform post-registration booting of services.
      *
      * @return void
-     * @throws LaravelRabbitMqException
      */
     public function boot()
     {
         $this->publishConfig();
-        $this->registerContainer();
-        $this->registerPublishers();
-        $this->registerConsumers();
         $this->registerCommands();
     }
 
