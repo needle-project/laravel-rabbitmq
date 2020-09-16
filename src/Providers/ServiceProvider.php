@@ -96,7 +96,7 @@ class ServiceProvider extends LaravelServiceProvider
     private function registerPublishers()
     {
         // Get "tagged" like Publisher
-        $this->app->singleton(PublisherInterface::class, function (Application $application, $arguments) {
+        $this->app->singleton(PublisherInterface::class, function ($application, $arguments) {
             /** @var Container $container */
             $container = $application->make(Container::class);
             if (empty($arguments)) {
@@ -113,7 +113,7 @@ class ServiceProvider extends LaravelServiceProvider
     private function registerConsumers()
     {
         // Get "tagged" like Consumers
-        $this->app->singleton(ConsumerInterface::class, function (Application $application, $arguments) {
+        $this->app->singleton(ConsumerInterface::class, function ($application, $arguments) {
             /** @var Container $container */
             $container = $application->make(Container::class);
             if (empty($arguments)) {
