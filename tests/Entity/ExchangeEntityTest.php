@@ -255,8 +255,6 @@ class ExchangeEntityTest extends TestCase
             ->method('getChannel')
             ->willReturn($channelMock);
 
-        // Mocking the exception fails so we must reporduce a real one
-        AbstractChannel::$PROTOCOL_CONSTANTS_CLASS = 'PhpAmqpLib\Wire\Constants091';
         $channelMock->expects($this->once())
             ->method('exchange_declare')
             ->willThrowException(
@@ -289,9 +287,6 @@ class ExchangeEntityTest extends TestCase
             ->method('getChannel')
             ->willReturn($channelMock);
 
-
-        // Mocking the exception fails so we must reporduce a real one
-        AbstractChannel::$PROTOCOL_CONSTANTS_CLASS = 'PhpAmqpLib\Wire\Constants091';
         $channelMock->expects($this->once())
             ->method('exchange_declare')
             ->willThrowException(
