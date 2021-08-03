@@ -475,7 +475,7 @@ class QueueEntity implements PublisherInterface, ConsumerInterface, AMQPEntityIn
     {
         try {
             $this->getMessageProcessor()->consume($message);
-            $this->logger->debug("Consumed message", [$message->getBody()]);
+            $this->logger->debug("Consumed message", ['message' => $message->getBody()]);
         } catch (\Throwable $e) {
             $this->logger->notice(
                 sprintf(
