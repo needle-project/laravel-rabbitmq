@@ -94,7 +94,7 @@ class QueueEntityTest extends TestCase
                 'exclusive-value',
                 'auto_delete-value',
                 'nowait-value',
-                'arguments-value',
+                'arguments-value'
             )
             ->willReturn(null);
 
