@@ -41,10 +41,10 @@ class QueueEntity implements PublisherInterface, ConsumerInterface, AMQPEntityIn
         'exclusive'                    => false,
         // Whether to delete it when the queue has no event on it
         'auto_delete'                  => false,
-        // Whether the exchange can be used by a publisher or block it (declared just for internal "wiring")
-        'internal'                     => false,
         // Whether to receive a Declare confirmation
         'nowait'                       => false,
+        // Additional arguments for queue creation
+        'arguments'                    => [],
         // Whether to auto create the entity before publishing/consuming it
         'auto_create'                  => false,
         // whether to "hide" the exception on re-declare.
@@ -108,15 +108,15 @@ class QueueEntity implements PublisherInterface, ConsumerInterface, AMQPEntityIn
     /**
      * @param AMQPConnection $connection
      * @param string $aliasName
-     * @param array $exchangeDetails
+     * @param array $queueDetails
      * @return QueueEntity
      */
-    public static function createQueue(AMQPConnection $connection, string $aliasName, array $exchangeDetails)
+    public static function createQueue(AMQPConnection $connection, string $aliasName, array $queueDetails)
     {
         return new static(
             $connection,
             $aliasName,
-            array_merge(self::DEFAULTS, $exchangeDetails)
+            array_merge(self::DEFAULTS, $queueDetails)
         );
     }
 
@@ -191,8 +191,8 @@ class QueueEntity implements PublisherInterface, ConsumerInterface, AMQPEntityIn
                     $this->attributes['durable'],
                     $this->attributes['exclusive'],
                     $this->attributes['auto_delete'],
-                    $this->attributes['internal'],
-                    $this->attributes['nowait']
+                    $this->attributes['nowait'],
+                    $this->attributes['arguments']
                 );
         } catch (AMQPProtocolChannelException $e) {
             // 406 is a soft error triggered for precondition failure (when redeclaring with different parameters)

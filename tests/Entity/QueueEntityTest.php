@@ -39,8 +39,8 @@ class QueueEntityTest extends TestCase
                 'durable'                      => false,
                 'exclusive'                    => false,
                 'auto_delete'                  => false,
-                'internal'                     => false,
                 'nowait'                       => false,
+                'arguments'                    => [],
                 'auto_create'                  => false,
                 'throw_exception_on_redeclare' => true,
                 'throw_exception_on_bind_fail' => true
@@ -93,20 +93,24 @@ class QueueEntityTest extends TestCase
                 'durable-value',
                 'exclusive-value',
                 'auto_delete-value',
-                'internal-value',
-                'nowait-value'
+                'nowait-value',
+                'arguments-value',
             )
             ->willReturn(null);
 
-        $queue = QueueEntity::createQueue($amqpConnection, 'foo', [
-            'name' => 'queue.name.on.rabbit',
-            'passive'   => 'passive-value',
-            'durable'   => 'durable-value',
-            'exclusive' => 'exclusive-value',
-            'auto_delete' => 'auto_delete-value',
-            'internal'  => 'internal-value',
-            'nowait'    => 'nowait-value',
-        ]);
+        $queue = QueueEntity::createQueue(
+            $amqpConnection,
+            'foo',
+            [
+                'name'        => 'queue.name.on.rabbit',
+                'passive'     => 'passive-value',
+                'durable'     => 'durable-value',
+                'exclusive'   => 'exclusive-value',
+                'auto_delete' => 'auto_delete-value',
+                'nowait'      => 'nowait-value',
+                'arguments'   => 'arguments-value',
+            ]
+        );
         $queue->create();
     }
 
