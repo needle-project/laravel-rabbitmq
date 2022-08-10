@@ -2,8 +2,8 @@ build:
   nodes:
     analysis:
       project_setup:
-      override:
-        - 'true'
+        override:
+          - 'true'
       tests:
         override:
           - command: 'vendor/bin/phpunit --coverage-clover=coverage-report'
