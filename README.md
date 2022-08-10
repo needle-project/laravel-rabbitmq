@@ -40,6 +40,7 @@ composer require needle-project/laravel-rabbitmq
 For Laravel version 5.5 or higher the library should be automatically loaded via [Package discovery](https://laravel.com/docs/5.6/packages#package-discovery).
 
 For Laravel versions below 5.5 you need to add the service provider to `app.php`:
+
 ```php
 <?php
 
@@ -47,7 +48,7 @@ return [
     // ...
     'providers' => [
         // ...
-        NeedleProject\LaravelRabbitMq\Providers\ServiceProvider::class,
+        NeedleProject\LaravelRabbitMq\Providers\RabbitMqServiceProvider::class,
     ],
     // ...
 ];

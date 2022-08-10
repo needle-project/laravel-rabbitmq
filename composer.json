@@ -1,5 +1,5 @@
 {
-    "name": "needle-project/laravel-rabbitmq",
+    "name": "loffel/laravel-rabbitmq",
     "description": "Simple rabbitmq integration for Laravel",
     "license": "MIT",
     "authors": [
@@ -10,14 +10,13 @@
         }
     ],
     "require": {
-        "php": "7.*",
-	    "php-amqplib/php-amqplib": ">=2.7 <3.0"
+        "php": "^7.3|^8.0",
+	    "php-amqplib/php-amqplib": ">=2.7|3.*"
     },
     "require-dev": {
-        "phpunit/phpunit": "7.*|6.*",
+        "phpunit/phpunit": "9.*",
         "squizlabs/php_codesniffer": "2.*",
-        "phpmd/phpmd" : "@stable",
-        "laravel/framework": "5.5.*"
+        "phpmd/phpmd" : "@stable"
     },
     "autoload": {
         "psr-4": {"NeedleProject\\LaravelRabbitMq\\": "src/"}
