@@ -99,10 +99,10 @@ class AMQPConnection
     protected function getConnection(): AbstractConnection
     {
         if (is_null($this->connection)) {
-            if (!isset($this->connection['type'])) {
-                $this->connection['type'] = AMQPStreamConnection::class;
+            if (!isset($this->connectionDetails['type'])) {
+                $this->connectionDetails['type'] = AMQPStreamConnection::class;
             }
-            switch ($this->connection['type']) {
+            switch ($this->connectionDetails['type']) {
                 case AMQPStreamConnection::class:
                 case 'stream':
                     $type = AMQPStreamConnection::class;
