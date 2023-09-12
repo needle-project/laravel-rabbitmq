@@ -32,6 +32,8 @@ A simple rabbitmq library for laravel based on Publish–Subscribe pattern where
 
 4. [Contribute](#4-contribute)
 
+	4.1 [Local Development](#41-local-development)
+
 # 1. Install
 Run: 
 ```bash
@@ -329,3 +331,14 @@ protected function nack(AMQPMessage $message, bool $redeliver = true);
 # 4. Contribute
 You are free to contribute by submiting pull request or reporting any issue in Github.
 At the current stage of the project, no contribution procedure is defined.
+
+## 4.1 Local Development
+Run composer install (with ignore-platform-reqs to avoid missing extensions):
+```bash
+ docker run --rm -v $(pwd):/app jitesoft/phpunit:8.1 composer install --ignore-platform-req=ext-sockets
+```
+
+Run unit tests via Docker:
+```bash
+docker run --rm -v $(pwd):/app jitesoft/phpunit:8.1 phpunit --configuration phpunit.xml
+```
