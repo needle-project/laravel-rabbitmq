@@ -75,6 +75,7 @@ class ContainerBuilderTest extends TestCase
                 'my-consumer' => [
                     'queue' => 'my.queue',
                     'prefetch_count' => 1,
+                    'global_prefetch' => true,
                     'message_processor' => \NeedleProject\LaravelRabbitMq\Processor\CliOutputProcessor::class
                 ]
             ],
@@ -141,6 +142,7 @@ class ContainerBuilderTest extends TestCase
                 'my-consumer' => [
                     'queue' => 'my.queue',
                     'prefetch_count' => 1,
+                    'global_prefetch' => true,
                     'message_processor' => \NeedleProject\LaravelRabbitMq\Processor\CliOutputProcessor::class
                 ]
             ],

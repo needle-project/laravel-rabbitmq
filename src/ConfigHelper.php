@@ -81,10 +81,12 @@ class ConfigHelper
     {
         foreach ($consumers as $consumerAliasName => $consumerDefinition)
         {
-            if (isset($consumerDefinition['prefetch_count'])) {
-                continue;
+            if (!isset($consumerDefinition['prefetch_count'])) {
+                $consumerDefinition['prefetch_count'] = 1;
             }
-            $consumerDefinition['prefetch_count'] = 1;
+            if (!isset($consumerDefinition['global_prefetch'])) {
+                $consumerDefinition['global_prefetch'] = true;
+            }
             $consumers[$consumerAliasName] = $consumerDefinition;
         }
         return $consumers;

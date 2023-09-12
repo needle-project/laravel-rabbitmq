@@ -76,6 +76,7 @@ return [
         'consumerAliasName' => [
             'queue' => 'InternalAliasNameForTheQueue',
             'prefetch_count' => 10,
+            'global_prefetch' => false,
             'message_processor' => \NeedleProject\LaravelRabbitMq\Processor\CliOutputProcessor::class
         ]
     ]

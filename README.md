@@ -207,10 +207,11 @@ Define a consumer:
 ]
 ```
 
-Field  | Type | Description
-------------- | ------------- | -------------
-queue | string | Reference of the defined queue block.
-prefetch_count | int | *Default: 1*. The number of the message that a cosumer will grab without ack. Read more [here](https://www.rabbitmq.com/consumer-prefetch.html)
+Field  | Type    | Description
+------------- |---------| -------------
+queue | string  | Reference of the defined queue block.
+prefetch_count | int     | *Default: 1*. The number of the message that a cosumer will grab without ack. Read more [here](https://www.rabbitmq.com/consumer-prefetch.html)
+global_prefetch | boolean | *Default: true*. Setting if the prefetch should be set globally on the channel. Read more [here](https://www.rabbitmq.com/consumer-prefetch.html)
 passive | boolean | false | This is an AMQP attribute. Read about [here] (https://www.rabbitmq.com/amqp-0-9-1-reference.html)
 durable | boolean | false | Same as passive attribute
 auto_delete | boolean | false | Same as passive attribute
