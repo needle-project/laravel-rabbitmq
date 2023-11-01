@@ -36,6 +36,8 @@ class ExchangeEntity implements PublisherInterface, AMQPEntityInterface
         'internal'                     => false,
         // Whether to receive a Declare confirmation
         'nowait'                       => false,
+        // Additional arguments for queue creation
+        'arguments'                    => [],
         // Whether to auto create the entity before publishing/consuming it
         'auto_create'                  => false,
         // whether to "hide" the exception on re-declare.
@@ -44,6 +46,8 @@ class ExchangeEntity implements PublisherInterface, AMQPEntityInterface
         // whether to throw on exception when trying to
         // bind to an in-existent queue/exchange
         'throw_exception_on_bind_fail' => true,
+        // no ideea what it represents - @todo - find a documentation that states it's role
+        'ticket'                       => null
     ];
 
     /**
@@ -62,7 +66,7 @@ class ExchangeEntity implements PublisherInterface, AMQPEntityInterface
     protected $attributes;
 
     /**
-     * @var int 
+     * @var int
      */
     protected $retryCount = 0;
 
@@ -133,7 +137,9 @@ class ExchangeEntity implements PublisherInterface, AMQPEntityInterface
                     $this->attributes['durable'],
                     $this->attributes['auto_delete'],
                     $this->attributes['internal'],
-                    $this->attributes['nowait']
+                    $this->attributes['nowait'],
+                    $this->attributes['arguments'],
+                    $this->attributes['ticket']
                 );
         } catch (AMQPProtocolChannelException $e) {
             // 406 is a soft error triggered for precondition failure (when redeclaring with different parameters)
@@ -195,7 +201,7 @@ class ExchangeEntity implements PublisherInterface, AMQPEntityInterface
      * @return mixed|void
      * @throws AMQPProtocolChannelException
      */
-    public function publish(string $message, string $routingKey = '')
+    public function publish(string $message, string $routingKey = '', array $properties = [])
     {
         if ($this->attributes['auto_create'] === true) {
             $this->create();
@@ -203,7 +209,7 @@ class ExchangeEntity implements PublisherInterface, AMQPEntityInterface
         }
         try {
             $this->getChannel()->basic_publish(
-                new AMQPMessage($message),
+                new AMQPMessage($message, $properties),
                 $this->attributes['name'],
                 $routingKey,
                 true

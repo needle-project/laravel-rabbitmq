@@ -37,6 +37,8 @@ class ExchangeEntityTest extends TestCase
                 'auto_create'                  => false,
                 'throw_exception_on_redeclare' => true,
                 'throw_exception_on_bind_fail' => true,
+                'arguments'                    => [],
+                'ticket'                       => null
             ],
             $exchange->getAttributes()
         );

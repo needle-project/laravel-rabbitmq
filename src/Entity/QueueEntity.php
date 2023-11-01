@@ -53,6 +53,8 @@ class QueueEntity implements PublisherInterface, ConsumerInterface, AMQPEntityIn
         // whether to throw on exception when trying to
         // bind to an in-existent queue/exchange
         'throw_exception_on_bind_fail' => true,
+        // no ideea what it represents - @todo - find a documentation that states it's role
+        'ticket'                       => null
     ];
 
     /**
@@ -192,7 +194,8 @@ class QueueEntity implements PublisherInterface, ConsumerInterface, AMQPEntityIn
                     $this->attributes['exclusive'],
                     $this->attributes['auto_delete'],
                     $this->attributes['nowait'],
-                    $this->attributes['arguments']
+                    $this->attributes['arguments'],
+                    $this->attributes['ticket']
                 );
         } catch (AMQPProtocolChannelException $e) {
             // 406 is a soft error triggered for precondition failure (when redeclaring with different parameters)
@@ -248,10 +251,11 @@ class QueueEntity implements PublisherInterface, ConsumerInterface, AMQPEntityIn
      *
      * @param string $message
      * @param string $routingKey
+     * @param array $properties
      * @return mixed|void
      * @throws AMQPProtocolChannelException
      */
-    public function publish(string $message, string $routingKey = '')
+    public function publish(string $message, string $routingKey = '', array $properties = [])
     {
         if ($this->attributes['auto_create'] === true) {
             $this->create();
@@ -261,7 +265,7 @@ class QueueEntity implements PublisherInterface, ConsumerInterface, AMQPEntityIn
         try {
             $this->getChannel()
                 ->basic_publish(
-                    new AMQPMessage($message),
+                    new AMQPMessage($message, $properties),
                     '',
                     $this->attributes['name'],
                     true

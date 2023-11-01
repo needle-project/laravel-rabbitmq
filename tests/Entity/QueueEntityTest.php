@@ -43,7 +43,8 @@ class QueueEntityTest extends TestCase
                 'arguments'                    => [],
                 'auto_create'                  => false,
                 'throw_exception_on_redeclare' => true,
-                'throw_exception_on_bind_fail' => true
+                'throw_exception_on_bind_fail' => true,
+                'ticket'                       => null
             ],
             $queue->getAttributes()
         );
