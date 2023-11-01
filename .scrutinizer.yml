@@ -1,0 +1,11 @@
+build:
+  nodes:
+    analysis:
+      project_setup:
+        override: true
+      tests:
+        override:
+          - php-scrutinizer-run --enable-security-analysis
+  environment:
+    php:
+      version: 8.1.1
