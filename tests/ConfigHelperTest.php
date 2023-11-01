@@ -18,7 +18,7 @@ class ConfigHelperTest extends TestCase
         $this->assertEquals($expectedConfig, $newConfig);
     }
 
-    public function provideScenarios()
+    public static function provideScenarios()
     {
         return [
             // first scenario -- add root keys

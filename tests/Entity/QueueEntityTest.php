@@ -147,25 +147,25 @@ class QueueEntityTest extends TestCase
 
     public function testBind()
     {
-        $amqpConnection = $this->getMockBuilder(AMQPConnection::class)
-            ->disableOriginalConstructor()
-            ->getMock();
-
-        $channelMock = $this->getMockBuilder(AMQPChannel::class)
-            ->disableOriginalConstructor()
-            ->getMock();
+        $amqpConnection = $this->createMock(AMQPConnection::class);
+        $channelMock = $this->createMock(AMQPChannel::class);
 
         $amqpConnection->expects($this->exactly(2))
             ->method('getChannel')
             ->willReturn($channelMock);
 
-        $channelMock->expects($this->exactly(2))
+        $matcher = $this->exactly(2);
+        $matchingArgumentsOnFirstCall = ['queue.name.on.rabbit', 'first.exchange', 'a'];
+        $matchingArgumentsOnSecondCall = ['queue.name.on.rabbit', 'second.exchange', 'b'];
+        $channelMock->expects($matcher)
             ->method('queue_bind')
-            ->withConsecutive(
-                ['queue.name.on.rabbit', 'first.exchange', 'a'],
-                ['queue.name.on.rabbit', 'second.exchange', 'b']
-            )
-            ->willReturn(null);
+            ->willReturnCallback(
+                function (string $queue, string $exchange, string $routingKey) use ($matcher, $matchingArgumentsOnFirstCall, $matchingArgumentsOnSecondCall) {
+                    match ($matcher->numberOfInvocations()) {
+                        1 =>  $this->assertEquals($matchingArgumentsOnFirstCall, [$queue, $exchange, $routingKey]),
+                        2 =>  $this->assertEquals($matchingArgumentsOnSecondCall, [$queue, $exchange, $routingKey]),
+                    };
+                });
 
         $queue = QueueEntity::createQueue(
             $amqpConnection,
@@ -183,13 +183,8 @@ class QueueEntityTest extends TestCase
 
     public function testPublish()
     {
-        $amqpConnection = $this->getMockBuilder(AMQPConnection::class)
-            ->disableOriginalConstructor()
-            ->getMock();
-
-        $channelMock = $this->getMockBuilder(AMQPChannel::class)
-            ->disableOriginalConstructor()
-            ->getMock();
+        $amqpConnection = $this->createMock(AMQPConnection::class);
+        $channelMock = $this->createMock(AMQPChannel::class);
 
         $amqpConnection->expects($this->once())
             ->method('getChannel')
@@ -217,13 +212,8 @@ class QueueEntityTest extends TestCase
 
     public function testCreateQueueWithExceptionSuppressing()
     {
-        $amqpConnection = $this->getMockBuilder(AMQPConnection::class)
-            ->disableOriginalConstructor()
-            ->getMock();
-
-        $channelMock = $this->getMockBuilder(AMQPChannel::class)
-            ->disableOriginalConstructor()
-            ->getMock();
+        $amqpConnection = $this->createMock(AMQPConnection::class);
+        $channelMock = $this->createMock(AMQPChannel::class);
 
         $amqpConnection->expects($this->once())
             ->method('getChannel')
@@ -244,13 +234,8 @@ class QueueEntityTest extends TestCase
 
     public function testCreateQueueWithoutExceptionSuppressing()
     {
-        $amqpConnection = $this->getMockBuilder(AMQPConnection::class)
-            ->disableOriginalConstructor()
-            ->getMock();
-
-        $channelMock = $this->getMockBuilder(AMQPChannel::class)
-            ->disableOriginalConstructor()
-            ->getMock();
+        $amqpConnection = $this->createMock(AMQPConnection::class);
+        $channelMock = $this->createMock(AMQPChannel::class);
 
         $amqpConnection->expects($this->once())
             ->method('getChannel')
@@ -272,14 +257,8 @@ class QueueEntityTest extends TestCase
 
     public function testBindException()
     {
-        $amqpConnection = $this->getMockBuilder(AMQPConnection::class)
-            ->disableOriginalConstructor()
-            ->getMock();
-
-        $channelMock = $this->getMockBuilder(AMQPChannel::class)
-            ->disableOriginalConstructor()
-            ->getMock();
-
+        $amqpConnection = $this->createMock(AMQPConnection::class);
+        $channelMock = $this->createMock(AMQPChannel::class);
         $amqpConnection->expects($this->once())
             ->method('getChannel')
             ->willReturn($channelMock);
@@ -302,9 +281,7 @@ class QueueEntityTest extends TestCase
 
     public function testEmptyBind()
     {
-        $amqpConnection = $this->getMockBuilder(AMQPConnection::class)
-            ->disableOriginalConstructor()
-            ->getMock();
+        $amqpConnection = $this->createMock(AMQPConnection::class);
 
         $amqpConnection->expects($this->never())
             ->method('getChannel')
@@ -319,13 +296,8 @@ class QueueEntityTest extends TestCase
 
     public function testPublishWithAutoCreate()
     {
-        $amqpConnection = $this->getMockBuilder(AMQPConnection::class)
-            ->disableOriginalConstructor()
-            ->getMock();
-
-        $channelMock = $this->getMockBuilder(AMQPChannel::class)
-            ->disableOriginalConstructor()
-            ->getMock();
+        $amqpConnection = $this->createMock(AMQPConnection::class);
+        $channelMock = $this->createMock(AMQPChannel::class);
 
         $amqpConnection->expects($this->exactly(3))
             ->method('getChannel')
@@ -357,15 +329,9 @@ class QueueEntityTest extends TestCase
 
     public function testProcessorCallback()
     {
-        $amqpConnection = $this->getMockBuilder(AMQPConnection::class)
-            ->disableOriginalConstructor()
-            ->getMock();
-
-        $processorMock = $this->getMockBuilder(MessageProcessorInterface::class)
-            ->getMock();
-
-        $loggerMock = $this->getMockBuilder(LoggerInterface::class)
-            ->getMock();
+        $amqpConnection = $this->createMock(AMQPConnection::class);
+        $processorMock = $this->createMock(MessageProcessorInterface::class);
+        $loggerMock = $this->createMock(LoggerInterface::class);
 
         $queue = QueueEntity::createQueue(
             $amqpConnection,
@@ -392,13 +358,8 @@ class QueueEntityTest extends TestCase
 
     public function testPublishRetry()
     {
-        $amqpConnection = $this->getMockBuilder(AMQPConnection::class)
-            ->disableOriginalConstructor()
-            ->getMock();
-
-        $channelMock = $this->getMockBuilder(AMQPChannel::class)
-            ->disableOriginalConstructor()
-            ->getMock();
+        $amqpConnection = $this->createMock(AMQPConnection::class);
+        $channelMock = $this->createMock(AMQPChannel::class);
 
         $amqpConnection->expects($this->atLeastOnce())
             ->method('getChannel')
@@ -432,13 +393,8 @@ class QueueEntityTest extends TestCase
 
     public function testPublishMaxRetry()
     {
-        $amqpConnection = $this->getMockBuilder(AMQPConnection::class)
-            ->disableOriginalConstructor()
-            ->getMock();
-
-        $channelMock = $this->getMockBuilder(AMQPChannel::class)
-            ->disableOriginalConstructor()
-            ->getMock();
+        $amqpConnection = $this->createMock(AMQPConnection::class);
+        $channelMock = $this->createMock(AMQPChannel::class);
 
         $amqpConnection->expects($this->atLeastOnce())
             ->method('getChannel')

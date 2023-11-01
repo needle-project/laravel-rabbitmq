@@ -16,25 +16,18 @@ class AbstractMessageProcessorTest extends TestCase
                 return true;
             }
         };
-        $loggerMock = $this->getMockBuilder(LoggerInterface::class)
-            ->getMock();
+        $loggerMock = $this->createMock(LoggerInterface::class);
         $messageProcessor->setLogger($loggerMock);
 
-
-        $channelMock = $this->getMockBuilder(AMQPChannel::class)
-            ->disableOriginalConstructor()
-            ->getMock();
+        $channelMock = $this->createMock(AMQPChannel::class);
         $channelMock->expects($this->once())
             ->method('basic_ack')
             ->with('foo')
             ->willReturn(null);
 
-        $amqpMessage = $this->getMockBuilder(AMQPMessage::class)
-            ->disableOriginalConstructor()
-            ->getMock();
+        $amqpMessage = $this->createMock(AMQPMessage::class);
         $amqpMessage->delivery_info['channel'] = $channelMock;
         $amqpMessage->delivery_info['delivery_tag'] = 'foo';
-
 
         $messageProcessor->consume($amqpMessage);
     }
@@ -47,24 +40,18 @@ class AbstractMessageProcessorTest extends TestCase
                 throw new \Exception('foo');
             }
         };
-        $loggerMock = $this->getMockBuilder(LoggerInterface::class)
-            ->getMock();
+        $loggerMock = $this->createMock(LoggerInterface::class);
         $messageProcessor->setLogger($loggerMock);
 
-        $channelMock = $this->getMockBuilder(AMQPChannel::class)
-            ->disableOriginalConstructor()
-            ->getMock();
+        $channelMock = $this->createMock(AMQPChannel::class);
         $channelMock->expects($this->once())
             ->method('basic_nack')
             ->with('foo')
             ->willReturn(null);
 
-        $amqpMessage = $this->getMockBuilder(AMQPMessage::class)
-            ->disableOriginalConstructor()
-            ->getMock();
+        $amqpMessage = $this->createMock(AMQPMessage::class);
         $amqpMessage->delivery_info['channel'] = $channelMock;
         $amqpMessage->delivery_info['delivery_tag'] = 'foo';
-
 
         $messageProcessor->consume($amqpMessage);
     }
@@ -77,24 +64,18 @@ class AbstractMessageProcessorTest extends TestCase
                 return false;
             }
         };
-        $loggerMock = $this->getMockBuilder(LoggerInterface::class)
-            ->getMock();
+        $loggerMock = $this->createMock(LoggerInterface::class);
         $messageProcessor->setLogger($loggerMock);
 
-        $channelMock = $this->getMockBuilder(AMQPChannel::class)
-            ->disableOriginalConstructor()
-            ->getMock();
+        $channelMock = $this->createMock(AMQPChannel::class);
         $channelMock->expects($this->once())
             ->method('basic_nack')
             ->with('foo')
             ->willReturn(null);
 
-        $amqpMessage = $this->getMockBuilder(AMQPMessage::class)
-            ->disableOriginalConstructor()
-            ->getMock();
+        $amqpMessage = $this->createMock(AMQPMessage::class);
         $amqpMessage->delivery_info['channel'] = $channelMock;
         $amqpMessage->delivery_info['delivery_tag'] = 'foo';
-
 
         $messageProcessor->consume($amqpMessage);
     }
@@ -107,17 +88,11 @@ class AbstractMessageProcessorTest extends TestCase
                 return true;
             }
         };
-        $loggerMock = $this->getMockBuilder(LoggerInterface::class)
-            ->getMock();
+        $loggerMock = $this->createMock(LoggerInterface::class);
         $messageProcessor->setLogger($loggerMock);
 
-        $channelMock = $this->getMockBuilder(AMQPChannel::class)
-            ->disableOriginalConstructor()
-            ->getMock();
-
-        $amqpMessage = $this->getMockBuilder(AMQPMessage::class)
-            ->disableOriginalConstructor()
-            ->getMock();
+        $channelMock = $this->createMock(AMQPChannel::class);
+        $amqpMessage = $this->createMock(AMQPMessage::class);
         $amqpMessage->delivery_info['channel'] = $channelMock;
         $amqpMessage->delivery_info['delivery_tag'] = 'foo';
 
@@ -133,25 +108,19 @@ class AbstractMessageProcessorTest extends TestCase
         $messageProcessor = new class extends AbstractMessageProcessor {
             public function processMessage(AMQPMessage $message): bool
             {
-                return true;
+                return false;
             }
         };
-        $loggerMock = $this->getMockBuilder(LoggerInterface::class)
-            ->getMock();
+        $loggerMock = $this->createMock(LoggerInterface::class);
         $messageProcessor->setLogger($loggerMock);
 
-        $channelMock = $this->getMockBuilder(AMQPChannel::class)
-            ->disableOriginalConstructor()
-            ->getMock();
-
-        $amqpMessage = $this->getMockBuilder(AMQPMessage::class)
-            ->disableOriginalConstructor()
-            ->getMock();
+        $channelMock = $this->createMock(AMQPChannel::class);
+        $amqpMessage = $this->createMock(AMQPMessage::class);
         $amqpMessage->delivery_info['channel'] = $channelMock;
 
         $loggerMock->expects($this->once())
-            ->method('error')
-            ->willReturn(null);
+            ->method('error');
+
         $messageProcessor->consume($amqpMessage);
     }
 
@@ -165,19 +134,14 @@ class AbstractMessageProcessorTest extends TestCase
                 return false;
             }
         };
-        $loggerMock = $this->getMockBuilder(LoggerInterface::class)
-            ->getMock();
+        $loggerMock = $this->createMock(LoggerInterface::class);
         $messageProcessor->setLogger($loggerMock);
-        $channelMock = $this->getMockBuilder(AMQPChannel::class)
-            ->disableOriginalConstructor()
-            ->getMock();
+        $channelMock = $this->createMock(AMQPChannel::class);
         $channelMock->expects($this->atLeastOnce())
             ->method('basic_nack')
             ->will($this->throwException(new \RuntimeException('FooBar')));
 
-        $amqpMessage = $this->getMockBuilder(AMQPMessage::class)
-            ->disableOriginalConstructor()
-            ->getMock();
+        $amqpMessage = $this->createMock(AMQPMessage::class);
         $amqpMessage->delivery_info['channel'] = $channelMock;
         $amqpMessage->delivery_info['delivery_tag'] = 1;
         $amqpMessage->expects($this->atLeastOnce())
@@ -186,8 +150,7 @@ class AbstractMessageProcessorTest extends TestCase
 
         $loggerMock->expects($this->atLeastOnce())
             ->method('debug')
-            ->with('Did not processed with success message foo')
-            ->willReturn(null);
+            ->with('Did not processed with success message foo');
         $messageProcessor->consume($amqpMessage);
     }
 }

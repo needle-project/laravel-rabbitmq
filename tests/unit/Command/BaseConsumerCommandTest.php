@@ -11,13 +11,9 @@ class BaseConsumerCommandTest extends TestCase
 {
     public function testHandleCollaboration()
     {
-        $consumerMock = $this->getMockBuilder(ConsumerInterface::class)
-            ->disableOriginalConstructor()
-            ->getMock();
-        $inputInterfaceMock = $this->getMockBuilder(InputInterface::class)
-            ->getMock();
-        $outputInterfaceMock = $this->getMockBuilder(OutputInterface::class)
-            ->getMock();
+        $consumerMock = $this->createMock(ConsumerInterface::class);
+        $inputInterfaceMock = $this->createMock(InputInterface::class);
+        $outputInterfaceMock = $this->createMock(OutputInterface::class);
 
         $consumerCommand = new class($consumerMock, $inputInterfaceMock, $outputInterfaceMock) extends BaseConsumerCommand {
 
@@ -74,14 +70,9 @@ class BaseConsumerCommandTest extends TestCase
 
     public function testFailConsumeCollaboration()
     {
-        $consumerMock = $this->getMockBuilder(ConsumerInterface::class)
-            ->disableOriginalConstructor()
-            ->getMock();
-        $inputInterfaceMock = $this->getMockBuilder(InputInterface::class)
-            ->getMock();
-        $outputInterfaceMock = $this->getMockBuilder(SymfonyStyle::class)
-            ->disableOriginalConstructor()
-            ->getMock();
+        $consumerMock = $this->createMock(ConsumerInterface::class);
+        $inputInterfaceMock = $this->createMock(InputInterface::class);
+        $outputInterfaceMock = $this->createMock(SymfonyStyle::class);
 
         $consumerCommand = new class($consumerMock, $inputInterfaceMock, $outputInterfaceMock) extends BaseConsumerCommand {
 
