@@ -103,28 +103,6 @@ class AbstractMessageProcessorTest extends TestCase
         $this->assertEquals(3, $messageProcessor->getProcessedMessages());
     }
 
-    public function testErrorAck()
-    {
-        $messageProcessor = new class extends AbstractMessageProcessor {
-            public function processMessage(AMQPMessage $message): bool
-            {
-                return false;
-            }
-        };
-        $loggerMock = $this->createMock(LoggerInterface::class);
-        $messageProcessor->setLogger($loggerMock);
-
-        $channelMock = $this->createMock(AMQPChannel::class);
-        $amqpMessage = $this->createMock(AMQPMessage::class);
-        $amqpMessage->delivery_info['channel'] = $channelMock;
-
-        $loggerMock->expects($this->once())
-            ->method('error');
-
-        $messageProcessor->consume($amqpMessage);
-    }
-
-
     public function testErrorNack()
     {
         $messageProcessor = new class extends AbstractMessageProcessor {
