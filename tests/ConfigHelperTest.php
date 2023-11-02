@@ -18,7 +18,7 @@ class ConfigHelperTest extends TestCase
         $this->assertEquals($expectedConfig, $newConfig);
     }
 
-    public static function provideScenarios()
+    public static function provideScenarios(): array
     {
         return [
             // first scenario -- add root keys
@@ -61,7 +61,7 @@ class ConfigHelperTest extends TestCase
                     'consumers' => []
                 ]
             ],
-            // third scenario -- add prefetch_count on consumer
+            // third scenario -- add prefetch_count and global_prefetch on consumer
             [
                 [
                     'connections' => [
@@ -97,11 +97,94 @@ class ConfigHelperTest extends TestCase
                         'foo_consumer' => [
                             'queue' => 'foo',
                             'prefetch_count' => 1,
+                            'global_prefetch' => true,
                             'message_processor' => 'BAR'
                         ]
                     ]
                 ]
-            ]
+            ],
+            // 4th scenario -- don't override prefetch_count and global_prefetch on consumer
+            [
+                [
+                    'connections' => [
+                        'bar' => []
+                    ],
+                    'queues' => [
+                        'foo' => [
+                            'name' => 'foo.bar',
+                            'connection' => 'bar'
+                        ]
+                    ],
+                    'consumers' => [
+                        'foo_consumer' => [
+                            'queue' => 'foo',
+                            'prefetch_count' => 3,
+                            'global_prefetch' => false,
+                            'message_processor' => 'BAR'
+                        ]
+                    ]
+                ],
+                [
+                    'connections' => [
+                        'bar' => []
+                    ],
+                    'queues' => [
+                        'foo' => [
+                            'name' => 'foo.bar',
+                            'connection' => 'bar',
+                            'attributes' => []
+                        ]
+                    ],
+                    'exchanges' => [],
+                    'publishers' => [],
+                    'consumers' => [
+                        'foo_consumer' => [
+                            'queue' => 'foo',
+                            'prefetch_count' => 3,
+                            'global_prefetch' => false,
+                            'message_processor' => 'BAR'
+                        ]
+                    ]
+                ]
+            ],
+            // 5th scenario -- add attributes on queues
+            [
+                [
+                    'connections' => [
+                        'bar' => []
+                    ],
+                    'queues' => [
+                        'foo' => [
+                            'name' => 'foo.bar',
+                            'connection' => 'bar',
+                            'attributes' => [
+                                'bind'        => [
+                                    ['exchange' => 'foobar']
+                                ]
+                            ]
+                        ]
+                    ]
+                ],
+                [
+                    'connections' => [
+                        'bar' => []
+                    ],
+                    'queues' => [
+                        'foo' => [
+                            'name' => 'foo.bar',
+                            'connection' => 'bar',
+                            'attributes' => [
+                                'bind'        => [
+                                    ['exchange' => 'foobar']
+                                ]
+                            ]
+                        ]
+                    ],
+                    'exchanges' => [],
+                    'publishers' => [],
+                    'consumers' => []
+                ]
+            ],
         ];
     }
 }

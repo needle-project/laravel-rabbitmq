@@ -70,19 +70,14 @@ class AMQPConnectionTest extends TestCase
 
     public function testConnectionGetChannel()
     {
-        $channelMock = $this->getMockBuilder(AMQPChannel::class)
-            ->disableOriginalConstructor()
-            ->getMock();
-
-        $connectionMock = $this->getMockBuilder(AbstractConnection::class)
-            ->disableOriginalConstructor()
-            ->getMock();
+        $channelMock = $this->createMock(AMQPChannel::class);
+        $connectionMock = $this->createMock(AbstractConnection::class);
 
         $connectionMock->expects($this->once())
             ->method('channel')
             ->willReturn($channelMock);
 
-        $amqpConnection = new class('foo', [], $connectionMock)  extends AMQPConnection {
+        $amqpConnection = new class('foo', [], $connectionMock) extends AMQPConnection {
             /**
              * @var AMQPStreamConnection
              */
@@ -122,12 +117,12 @@ class AMQPConnectionTest extends TestCase
     public function testLazyConnection()
     {
         $tester = $this;
+        $abstractConnectionMock = $this->createMock(AbstractConnection::class);
 
-        new class('foo', ['lazy' => false], $tester)  extends AMQPConnection {
-            /**
-             * @var null|TestCase
-             */
+        new class('foo', ['lazy' => false], $tester, $abstractConnectionMock)  extends AMQPConnection {
             private $tester;
+
+            private $abstractConnectionMock;
 
             /**
              *  constructor.
@@ -136,9 +131,10 @@ class AMQPConnectionTest extends TestCase
              * @param array $connectionDetails
              * @param null $tester
              */
-            public function __construct($aliasName, array $connectionDetails = [], $tester = null)
+            public function __construct($aliasName, array $connectionDetails = [], $tester = null, $abstractConnectionMock = null)
             {
                 $this->tester = $tester;
+                $this->abstractConnectionMock = $abstractConnectionMock;
                 parent::__construct($aliasName, $connectionDetails);
             }
 
@@ -148,25 +144,19 @@ class AMQPConnectionTest extends TestCase
             protected function getConnection(): AbstractConnection
             {
                 $this->tester->assertTrue(true);
-                return $this->tester->getMockBuilder(AbstractConnection::class)
-                    ->disableOriginalConstructor()
-                    ->getMock();
+                return $this->abstractConnectionMock;
             }
         };
     }
 
     public function testReconnect()
     {
-        $channelMock = $this->getMockBuilder(AMQPChannel::class)
-            ->disableOriginalConstructor()
-            ->getMock();
+        $channelMock = $this->createMock(AMQPChannel::class);
         $channelMock->expects($this->once())
             ->method('close')
             ->willReturn(null);
 
-        $connectionMock = $this->getMockBuilder(AbstractConnection::class)
-            ->disableOriginalConstructor()
-            ->getMock();
+        $connectionMock = $this->createMock(AbstractConnection::class);
 
         $connectionMock->expects($this->once())
             ->method('channel')

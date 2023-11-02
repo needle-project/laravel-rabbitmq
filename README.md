@@ -32,6 +32,8 @@ A simple rabbitmq library for laravel based on Publish–Subscribe pattern where
 
 4. [Contribute](#4-contribute)
 
+	4.1 [Local Development](#41-local-development)
+
 # 1. Install
 Run: 
 ```bash
@@ -207,10 +209,11 @@ Define a consumer:
 ]
 ```
 
-Field  | Type | Description
-------------- | ------------- | -------------
-queue | string | Reference of the defined queue block.
-prefetch_count | int | *Default: 1*. The number of the message that a cosumer will grab without ack. Read more [here](https://www.rabbitmq.com/consumer-prefetch.html)
+Field  | Type    | Description
+------------- |---------| -------------
+queue | string  | Reference of the defined queue block.
+prefetch_count | int     | *Default: 1*. The number of the message that a cosumer will grab without ack. Read more [here](https://www.rabbitmq.com/consumer-prefetch.html)
+global_prefetch | boolean | *Default: true*. Setting if the prefetch should be set globally on the channel. Read more [here](https://www.rabbitmq.com/consumer-prefetch.html)
 passive | boolean | false | This is an AMQP attribute. Read about [here] (https://www.rabbitmq.com/amqp-0-9-1-reference.html)
 durable | boolean | false | Same as passive attribute
 auto_delete | boolean | false | Same as passive attribute
@@ -328,3 +331,14 @@ protected function nack(AMQPMessage $message, bool $redeliver = true);
 # 4. Contribute
 You are free to contribute by submiting pull request or reporting any issue in Github.
 At the current stage of the project, no contribution procedure is defined.
+
+## 4.1 Local Development
+Run composer install (with ignore-platform-reqs to avoid missing extensions):
+```bash
+ docker run --rm -v $(pwd):/app jitesoft/phpunit:8.1 composer install --ignore-platform-req=ext-sockets
+```
+
+Run unit tests via Docker:
+```bash
+docker run --rm -v $(pwd):/app jitesoft/phpunit:8.1 phpunit --configuration phpunit.xml
+```

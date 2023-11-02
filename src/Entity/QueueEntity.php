@@ -1,4 +1,5 @@
 <?php
+
 namespace NeedleProject\LaravelRabbitMq\Entity;
 
 use NeedleProject\LaravelRabbitMq\AMQPConnection;
@@ -106,6 +107,10 @@ class QueueEntity implements PublisherInterface, ConsumerInterface, AMQPEntityIn
      * @var int
      */
     protected $retryCount = 0;
+    /**
+     * @var bool
+     */
+    protected $globalPrefetch = true;
 
     /**
      * @param AMQPConnection $connection
@@ -165,6 +170,17 @@ class QueueEntity implements PublisherInterface, ConsumerInterface, AMQPEntityIn
     }
 
     /**
+     * @param bool $globalPrefetch
+     * @return ConsumerInterface
+     */
+    public function setGlobalPrefetch(bool $globalPrefetch): ConsumerInterface
+    {
+        $this->globalPrefetch = $globalPrefetch;
+
+        return $this;
+    }
+
+    /**
      * @return AMQPConnection
      */
     protected function getConnection(): AMQPConnection
@@ -218,7 +234,7 @@ class QueueEntity implements PublisherInterface, ConsumerInterface, AMQPEntityIn
                     ->queue_bind(
                         $this->attributes['name'],
                         $bindItem['exchange'],
-                        $bindItem['routing_key']
+                        $bindItem['routing_key'] ?? ''
                     );
             } catch (AMQPProtocolChannelException $e) {
                 // 404 is the code for trying to bind to an non-existing entity
@@ -277,6 +293,7 @@ class QueueEntity implements PublisherInterface, ConsumerInterface, AMQPEntityIn
             if ($this->retryCount < self::MAX_RETRIES) {
                 $this->getConnection()->reconnect();
                 $this->publish($message, $routingKey);
+
                 return;
             }
             throw $exception;
@@ -393,7 +410,7 @@ class QueueEntity implements PublisherInterface, ConsumerInterface, AMQPEntityIn
         }
 
         $this->getChannel()
-            ->basic_qos(null, $this->prefetchCount, true);
+             ->basic_qos(null, $this->prefetchCount, $this->globalPrefetch);
 
         $this->getChannel()
             ->basic_consume(
