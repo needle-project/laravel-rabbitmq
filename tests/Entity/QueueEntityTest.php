@@ -7,6 +7,7 @@ use PhpAmqpLib\Channel\AMQPChannel;
 use PhpAmqpLib\Exception\AMQPChannelClosedException;
 use PhpAmqpLib\Exception\AMQPProtocolChannelException;
 use PhpAmqpLib\Message\AMQPMessage;
+use PhpAmqpLib\Wire\AMQPTable;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use Tests\NeedleProject\LaravelRabbitMq\Stubs\QueueEntityDetailsStub;
@@ -78,9 +79,7 @@ class QueueEntityTest extends TestCase
             ->disableOriginalConstructor()
             ->getMock();
 
-        $channelMock = $this->getMockBuilder(AMQPChannel::class)
-            ->disableOriginalConstructor()
-            ->getMock();
+        $channelMock = $this->createMock(AMQPChannel::class);
 
         $amqpConnection->expects($this->once())
             ->method('getChannel')
@@ -95,7 +94,7 @@ class QueueEntityTest extends TestCase
                 'exclusive-value',
                 'auto_delete-value',
                 'nowait-value',
-                'arguments-value'
+                new AMQPTable([])
             )
             ->willReturn(null);
 
@@ -109,7 +108,7 @@ class QueueEntityTest extends TestCase
                 'exclusive'   => 'exclusive-value',
                 'auto_delete' => 'auto_delete-value',
                 'nowait'      => 'nowait-value',
-                'arguments'   => 'arguments-value',
+                'arguments'   => [],
             ]
         );
         $queue->create();

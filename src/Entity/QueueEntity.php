@@ -4,6 +4,7 @@ namespace NeedleProject\LaravelRabbitMq\Entity;
 
 use NeedleProject\LaravelRabbitMq\AMQPConnection;
 use NeedleProject\LaravelRabbitMq\ConsumerInterface;
+use NeedleProject\LaravelRabbitMq\Interpreter\EntityArgumentsInterpreter;
 use NeedleProject\LaravelRabbitMq\Processor\AbstractMessageProcessor;
 use NeedleProject\LaravelRabbitMq\Processor\MessageProcessorInterface;
 use NeedleProject\LaravelRabbitMq\PublisherInterface;
@@ -11,6 +12,7 @@ use PhpAmqpLib\Channel\AMQPChannel;
 use PhpAmqpLib\Exception\AMQPProtocolChannelException;
 use PhpAmqpLib\Exception\AMQPTimeoutException;
 use PhpAmqpLib\Message\AMQPMessage;
+use PhpAmqpLib\Wire\AMQPTable;
 use Psr\Log\LoggerAwareInterface;
 use Psr\Log\LoggerAwareTrait;
 use PhpAmqpLib\Exception\AMQPChannelClosedException;
@@ -210,7 +212,9 @@ class QueueEntity implements PublisherInterface, ConsumerInterface, AMQPEntityIn
                     $this->attributes['exclusive'],
                     $this->attributes['auto_delete'],
                     $this->attributes['nowait'],
-                    $this->attributes['arguments'],
+                    EntityArgumentsInterpreter::interpretArguments(
+                        $this->attributes['arguments']
+                    ),
                     $this->attributes['ticket']
                 );
         } catch (AMQPProtocolChannelException $e) {

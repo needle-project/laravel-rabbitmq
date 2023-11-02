@@ -2,11 +2,13 @@
 namespace NeedleProject\LaravelRabbitMq\Entity;
 
 use NeedleProject\LaravelRabbitMq\AMQPConnection;
+use NeedleProject\LaravelRabbitMq\Interpreter\EntityArgumentsInterpreter;
 use NeedleProject\LaravelRabbitMq\PublisherInterface;
 use PhpAmqpLib\Channel\AMQPChannel;
 use PhpAmqpLib\Exception\AMQPChannelClosedException;
 use PhpAmqpLib\Exception\AMQPProtocolChannelException;
 use PhpAmqpLib\Message\AMQPMessage;
+use PhpAmqpLib\Wire\AMQPTable;
 
 /**
  * Class ExchangeEntity
@@ -138,7 +140,9 @@ class ExchangeEntity implements PublisherInterface, AMQPEntityInterface
                     $this->attributes['auto_delete'],
                     $this->attributes['internal'],
                     $this->attributes['nowait'],
-                    $this->attributes['arguments'],
+                    EntityArgumentsInterpreter::interpretArguments(
+                        $this->attributes['arguments']
+                    ),
                     $this->attributes['ticket']
                 );
         } catch (AMQPProtocolChannelException $e) {
