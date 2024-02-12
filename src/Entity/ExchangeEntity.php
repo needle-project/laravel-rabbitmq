@@ -197,11 +197,11 @@ class ExchangeEntity implements PublisherInterface, AMQPEntityInterface
      */
     public function publish(string $message, string $routingKey = '')
     {
-        if ($this->attributes['auto_create'] === true) {
-            $this->create();
-            $this->bind();
-        }
         try {
+            if ($this->attributes['auto_create'] === true) {
+                $this->create();
+                $this->bind();
+            }
             $this->getChannel()->basic_publish(
                 new AMQPMessage($message),
                 $this->attributes['name'],
