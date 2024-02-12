@@ -1,4 +1,5 @@
 <?php
+
 namespace NeedleProject\LaravelRabbitMq\Entity;
 
 use NeedleProject\LaravelRabbitMq\AMQPConnection;
@@ -65,6 +66,11 @@ class ExchangeEntity implements PublisherInterface, AMQPEntityInterface
      * @var int 
      */
     protected $retryCount = 0;
+
+    /**
+     * @var array
+     */
+    protected $properties = [];
 
     /**
      * ExchangeEntity constructor.
@@ -203,7 +209,10 @@ class ExchangeEntity implements PublisherInterface, AMQPEntityInterface
                 $this->bind();
             }
             $this->getChannel()->basic_publish(
-                new AMQPMessage($message),
+                new AMQPMessage(
+                    $message,
+                    $this->getMessageProperties()
+                ),
                 $this->attributes['name'],
                 $routingKey,
                 true
@@ -219,5 +228,22 @@ class ExchangeEntity implements PublisherInterface, AMQPEntityInterface
             }
             throw $exception;
         }
+    }
+
+    /**
+     * @param array $properties
+     * @return void
+     */
+    public function setMessageProperties(array $properties = [])
+    {
+        $this->properties = $properties;
+    }
+
+    /**
+     * @return array
+     */
+    private function getMessageProperties(): array
+    {
+        return $this->properties;
     }
 }

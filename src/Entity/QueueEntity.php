@@ -111,6 +111,11 @@ class QueueEntity implements PublisherInterface, ConsumerInterface, AMQPEntityIn
     protected $globalPrefetch = true;
 
     /**
+     * @var array
+     */
+    protected $properties = [];
+
+    /**
      * @param AMQPConnection $connection
      * @param string $aliasName
      * @param array $queueDetails
@@ -507,5 +512,22 @@ class QueueEntity implements PublisherInterface, ConsumerInterface, AMQPEntityIn
             // ever appear
             throw $e;
         }
+    }
+
+    /**
+     * @param array $properties
+     * @return void
+     */
+    public function setMessageProperties(array $properties = [])
+    {
+        $this->properties = $properties;
+    }
+
+    /**
+     * @return array
+     */
+    private function getMessageProperties(): array
+    {
+        return [$this->properties];
     }
 }

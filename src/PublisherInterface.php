@@ -1,4 +1,5 @@
 <?php
+
 namespace NeedleProject\LaravelRabbitMq;
 
 /**
@@ -17,4 +18,12 @@ interface PublisherInterface
      * @return mixed
      */
     public function publish(string $message, string $routingKey = '');
+
+    /**
+     * Set array of properties for message
+     *
+     * @param array $properties
+     * @return mixed
+     */
+    public function setMessageProperties(array $properties = []);
 }
