@@ -1,4 +1,3 @@
-[![Build Status](https://travis-ci.org/needle-project/process-transaction.svg?branch=master)](https://travis-ci.org/needle-project/process-transaction)
 [![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/needle-project/laravel-rabbitmq/badges/quality-score.png?b=master)](https://scrutinizer-ci.com/g/needle-project/laravel-rabbitmq/?branch=master)
 [![Code Coverage](https://scrutinizer-ci.com/g/needle-project/laravel-rabbitmq/badges/coverage.png?b=master)](https://scrutinizer-ci.com/g/needle-project/laravel-rabbitmq/?branch=master)
 [![Total Downloads](https://poser.pugx.org/needle-project/laravel-rabbitmq/downloads)](https://packagist.org/packages/needle-project/laravel-rabbitmq)
@@ -30,9 +29,16 @@ A simple rabbitmq library for laravel based on Publish–Subscribe pattern where
 
 	3.4. [Custom Message Processor](#34-custom-message-processor)
 
-4. [Contribute](#4-contribute)
+4. [Examples](#4-examples)
 
-	4.1 [Local Development](#41-local-development)
+5. [Contribute](#5-contribute)
+
+	5.1 [Local Development](#51-local-development)
+
+    5.2 [Required Help](#52-required-help)
+
+6. [Special "Thank You"](#6-special-thank-you)
+
 
 # 1. Install
 Run: 
@@ -320,7 +326,7 @@ rabbitmq:publish | Publish one message using a consumer | `php artisan rabbitmq:
 rabbitmq:setup | Creates all queues and exchanges | `php artisan rabbitmq:setup` or `php artisan rabbitmq:setup --force`. **NOTE** When using force, all queues and exchanges will be deleted first and then re-created.
 
 ### 3.4. Custom Message Processor
-At the current moment there is the posibility to either implement the `MessageProcessorInterface` class or extend the `AbstractMessageProcessor`.
+At the current moment there is the possibility to either implement the `MessageProcessorInterface` class or extend the `AbstractMessageProcessor`.
 
 When using the `AbstractMessageProcessor`, you will have access to extra API than can be used in your `processMessage()`:
 ```php
@@ -328,11 +334,11 @@ protected function ack(AMQPMessage $message);
 protected function nack(AMQPMessage $message, bool $redeliver = true);
 ```
 
-# 4. Contribute
-You are free to contribute by submiting pull request or reporting any issue in Github.
+# 5. Contribute
+You are free to contribute by submitting pull request or reporting any issue in Github.
 At the current stage of the project, no contribution procedure is defined.
 
-## 4.1 Local Development
+## 5.1 Local Development
 Run composer install (with ignore-platform-reqs to avoid missing extensions):
 ```bash
  docker run --rm -v $(pwd):/app jitesoft/phpunit:8.1 composer install --ignore-platform-req=ext-sockets
@@ -342,3 +348,12 @@ Run unit tests via Docker:
 ```bash
 docker run --rm -v $(pwd):/app jitesoft/phpunit:8.1 phpunit --configuration phpunit.xml
 ```
+
+## 5.2. Required Help
+There are multiple topics for which the library needs help
+- CI Pipeline: There is a need for a configuration of *scrutinizer* (or any other tool) that can cover running tests for all supported PHP Versions and Laravel Framework versions
+- Documentation: Any improvement to easy the use of the library it's welcome
+- Examples: A section of examples that proves the library's different real-world scenario examples
+
+## 6. Special "Thank you"
+Special "Thank you" goes out to the library [contributors](https://github.com/needle-project/laravel-rabbitmq/graphs/contributors).
