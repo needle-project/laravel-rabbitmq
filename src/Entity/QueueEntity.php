@@ -285,7 +285,13 @@ class QueueEntity implements PublisherInterface, ConsumerInterface, AMQPEntityIn
         try {
             $this->getChannel()
                 ->basic_publish(
-                    new AMQPMessage($message, $properties),
+                    new AMQPMessage(
+                        $message,
+                        EntityArgumentsInterpreter::interpretProperties(
+                            $this->attributes,
+                            $properties
+                        )
+                    ),
                     '',
                     $this->attributes['name'],
                     true
@@ -317,8 +323,11 @@ class QueueEntity implements PublisherInterface, ConsumerInterface, AMQPEntityIn
         $this->setupConsumer($messages, $seconds, $maxMemory);
         while (false === $this->shouldStopConsuming()) {
             try {
-                $this->getChannel()->wait(null, false, 1);
+                $this->getChannel()->wait(null, false, $seconds);
             } catch (AMQPTimeoutException $e) {
+                if ($this->shouldStopConsuming()) {
+                    break;
+                }
                 usleep(1000);
                 $this->getConnection()->reconnect();
                 $this->setupChannelConsumer();

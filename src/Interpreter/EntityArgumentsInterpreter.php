@@ -19,4 +19,12 @@ class EntityArgumentsInterpreter
         }
         return new AMQPTable($entityArguments);
     }
+
+    public static function interpretProperties(array $attributes, array $properties): array
+    {
+        if (isset($attributes['durable']) && $attributes['durable'] === true) {
+            $properties['delivery_mode'] = 2;
+        }
+        return $properties;
+    }
 }

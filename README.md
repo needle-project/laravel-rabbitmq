@@ -203,7 +203,7 @@ Defining a publishers:
 ```
 
 ### 2.5. Consumers
-A consumer will alway get message from a queue.
+A consumer will always get message from a queue.
 Define a consumer:
 ```php
 'consumers' => [
@@ -296,7 +296,7 @@ php artisan rabbitmq:publish aPublisherName MyMessage
 ### 3.2. Consuming a message
 Consuming message should be done by running a command in deamon mode. While PHP is not intended to do that, you can use [supervisor](http://supervisord.org/index.html) for that.
 
-The **flow** of the consummer is rather simple:
+The **flow** of the consumer is rather simple:
 CLI Consumers -> Get message -> Passes it to the `message_processor` key from configuration.
 
 A message processor is a class that implements `NeedleProject\LaravelRabbitMq\Processor` interface. If you do no want to handle acknowledgement you can extend  `\NeedleProject\LaravelRabbitMq\Processor\AbstractMessageProcessor` which require implementation of `processMessage(AMQPMessage $message): bool` method.

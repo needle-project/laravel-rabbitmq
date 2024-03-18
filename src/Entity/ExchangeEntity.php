@@ -19,7 +19,7 @@ use PhpAmqpLib\Wire\AMQPTable;
 class ExchangeEntity implements PublisherInterface, AMQPEntityInterface
 {
     /**
-     * @const int   Retry count when a Channel Closed exeption is thrown
+     * @const int   Retry count when a Channel Closed exception is thrown
      */
     const MAX_RETRIES = 3;
 
@@ -172,7 +172,7 @@ class ExchangeEntity implements PublisherInterface, AMQPEntityInterface
                         $bindItem['routing_key']
                     );
             } catch (AMQPProtocolChannelException $e) {
-                // 404 is the code for trying to bind to an non-existing entity
+                // 404 is the code for trying to bind to a non-existing entity
                 if (true === $this->attributes['throw_exception_on_bind_fail'] || $e->amqp_reply_code !== 404) {
                     throw $e;
                 }
@@ -202,6 +202,7 @@ class ExchangeEntity implements PublisherInterface, AMQPEntityInterface
      *
      * @param string $message
      * @param string $routingKey
+     * @param array $properties
      * @return mixed|void
      * @throws AMQPProtocolChannelException
      */
@@ -213,7 +214,13 @@ class ExchangeEntity implements PublisherInterface, AMQPEntityInterface
                 $this->bind();
             }
             $this->getChannel()->basic_publish(
-                new AMQPMessage($message, $properties),
+                new AMQPMessage(
+                    $message,
+                    EntityArgumentsInterpreter::interpretProperties(
+                        $this->attributes,
+                        $properties
+                    )
+                ),
                 $this->attributes['name'],
                 $routingKey,
                 true
