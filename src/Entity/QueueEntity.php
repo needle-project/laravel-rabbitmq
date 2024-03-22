@@ -4,6 +4,7 @@ namespace NeedleProject\LaravelRabbitMq\Entity;
 
 use NeedleProject\LaravelRabbitMq\AMQPConnection;
 use NeedleProject\LaravelRabbitMq\ConsumerInterface;
+use NeedleProject\LaravelRabbitMq\Interpreter\EntityArgumentsInterpreter;
 use NeedleProject\LaravelRabbitMq\Processor\AbstractMessageProcessor;
 use NeedleProject\LaravelRabbitMq\Processor\MessageProcessorInterface;
 use NeedleProject\LaravelRabbitMq\PublisherInterface;
@@ -11,6 +12,7 @@ use PhpAmqpLib\Channel\AMQPChannel;
 use PhpAmqpLib\Exception\AMQPProtocolChannelException;
 use PhpAmqpLib\Exception\AMQPTimeoutException;
 use PhpAmqpLib\Message\AMQPMessage;
+use PhpAmqpLib\Wire\AMQPTable;
 use Psr\Log\LoggerAwareInterface;
 use Psr\Log\LoggerAwareTrait;
 use PhpAmqpLib\Exception\AMQPChannelClosedException;
@@ -54,6 +56,8 @@ class QueueEntity implements PublisherInterface, ConsumerInterface, AMQPEntityIn
         // whether to throw on exception when trying to
         // bind to an in-existent queue/exchange
         'throw_exception_on_bind_fail' => true,
+        // no ideea what it represents - @todo - find a documentation that states it's role
+        'ticket'                       => null
     ];
 
     /**
@@ -208,7 +212,10 @@ class QueueEntity implements PublisherInterface, ConsumerInterface, AMQPEntityIn
                     $this->attributes['exclusive'],
                     $this->attributes['auto_delete'],
                     $this->attributes['nowait'],
-                    $this->attributes['arguments']
+                    EntityArgumentsInterpreter::interpretArguments(
+                        $this->attributes['arguments']
+                    ),
+                    $this->attributes['ticket']
                 );
         } catch (AMQPProtocolChannelException $e) {
             // 406 is a soft error triggered for precondition failure (when redeclaring with different parameters)
@@ -231,7 +238,7 @@ class QueueEntity implements PublisherInterface, ConsumerInterface, AMQPEntityIn
                     ->queue_bind(
                         $this->attributes['name'],
                         $bindItem['exchange'],
-                        $bindItem['routing_key']
+                        $bindItem['routing_key'] ?? ''
                     );
             } catch (AMQPProtocolChannelException $e) {
                 // 404 is the code for trying to bind to an non-existing entity
@@ -264,10 +271,11 @@ class QueueEntity implements PublisherInterface, ConsumerInterface, AMQPEntityIn
      *
      * @param string $message
      * @param string $routingKey
+     * @param array $properties
      * @return mixed|void
      * @throws AMQPProtocolChannelException
      */
-    public function publish(string $message, string $routingKey = '')
+    public function publish(string $message, string $routingKey = '', array $properties = [])
     {
         if ($this->attributes['auto_create'] === true) {
             $this->create();
@@ -277,7 +285,13 @@ class QueueEntity implements PublisherInterface, ConsumerInterface, AMQPEntityIn
         try {
             $this->getChannel()
                 ->basic_publish(
-                    new AMQPMessage($message),
+                    new AMQPMessage(
+                        $message,
+                        EntityArgumentsInterpreter::interpretProperties(
+                            $this->attributes,
+                            $properties
+                        )
+                    ),
                     '',
                     $this->attributes['name'],
                     true
@@ -309,8 +323,11 @@ class QueueEntity implements PublisherInterface, ConsumerInterface, AMQPEntityIn
         $this->setupConsumer($messages, $seconds, $maxMemory);
         while (false === $this->shouldStopConsuming()) {
             try {
-                $this->getChannel()->wait(null, false, 1);
+                $this->getChannel()->wait(null, false, $seconds);
             } catch (AMQPTimeoutException $e) {
+                if ($this->shouldStopConsuming()) {
+                    break;
+                }
                 usleep(1000);
                 $this->getConnection()->reconnect();
                 $this->setupChannelConsumer();

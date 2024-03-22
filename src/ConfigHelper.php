@@ -79,8 +79,7 @@ class ConfigHelper
      */
     private function addPrefetchOnConsumers(array $consumers): array
     {
-        foreach ($consumers as $consumerAliasName => $consumerDefinition)
-        {
+        foreach ($consumers as $consumerAliasName => $consumerDefinition) {
             if (!isset($consumerDefinition['prefetch_count'])) {
                 $consumerDefinition['prefetch_count'] = 1;
             }

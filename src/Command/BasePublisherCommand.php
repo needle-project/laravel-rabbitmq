@@ -66,5 +66,6 @@ class BasePublisherCommand extends Command
     {
         $this->getPublisher($this->input->getArgument('publisher'))
             ->publish($this->input->getArgument('message'));
+        return 0;
     }
 }

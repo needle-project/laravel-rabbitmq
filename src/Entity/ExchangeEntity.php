@@ -2,11 +2,13 @@
 namespace NeedleProject\LaravelRabbitMq\Entity;
 
 use NeedleProject\LaravelRabbitMq\AMQPConnection;
+use NeedleProject\LaravelRabbitMq\Interpreter\EntityArgumentsInterpreter;
 use NeedleProject\LaravelRabbitMq\PublisherInterface;
 use PhpAmqpLib\Channel\AMQPChannel;
 use PhpAmqpLib\Exception\AMQPChannelClosedException;
 use PhpAmqpLib\Exception\AMQPProtocolChannelException;
 use PhpAmqpLib\Message\AMQPMessage;
+use PhpAmqpLib\Wire\AMQPTable;
 
 /**
  * Class ExchangeEntity
@@ -17,7 +19,7 @@ use PhpAmqpLib\Message\AMQPMessage;
 class ExchangeEntity implements PublisherInterface, AMQPEntityInterface
 {
     /**
-     * @const int   Retry count when a Channel Closed exeption is thrown
+     * @const int   Retry count when a Channel Closed exception is thrown
      */
     const MAX_RETRIES = 3;
 
@@ -36,6 +38,8 @@ class ExchangeEntity implements PublisherInterface, AMQPEntityInterface
         'internal'                     => false,
         // Whether to receive a Declare confirmation
         'nowait'                       => false,
+        // Additional arguments for queue creation
+        'arguments'                    => [],
         // Whether to auto create the entity before publishing/consuming it
         'auto_create'                  => false,
         // whether to "hide" the exception on re-declare.
@@ -44,6 +48,8 @@ class ExchangeEntity implements PublisherInterface, AMQPEntityInterface
         // whether to throw on exception when trying to
         // bind to an in-existent queue/exchange
         'throw_exception_on_bind_fail' => true,
+        // no ideea what it represents - @todo - find a documentation that states it's role
+        'ticket'                       => null
     ];
 
     /**
@@ -62,7 +68,7 @@ class ExchangeEntity implements PublisherInterface, AMQPEntityInterface
     protected $attributes;
 
     /**
-     * @var int 
+     * @var int
      */
     protected $retryCount = 0;
 
@@ -133,7 +139,11 @@ class ExchangeEntity implements PublisherInterface, AMQPEntityInterface
                     $this->attributes['durable'],
                     $this->attributes['auto_delete'],
                     $this->attributes['internal'],
-                    $this->attributes['nowait']
+                    $this->attributes['nowait'],
+                    EntityArgumentsInterpreter::interpretArguments(
+                        $this->attributes['arguments']
+                    ),
+                    $this->attributes['ticket']
                 );
         } catch (AMQPProtocolChannelException $e) {
             // 406 is a soft error triggered for precondition failure (when redeclaring with different parameters)
@@ -162,7 +172,7 @@ class ExchangeEntity implements PublisherInterface, AMQPEntityInterface
                         $bindItem['routing_key']
                     );
             } catch (AMQPProtocolChannelException $e) {
-                // 404 is the code for trying to bind to an non-existing entity
+                // 404 is the code for trying to bind to a non-existing entity
                 if (true === $this->attributes['throw_exception_on_bind_fail'] || $e->amqp_reply_code !== 404) {
                     throw $e;
                 }
@@ -192,10 +202,11 @@ class ExchangeEntity implements PublisherInterface, AMQPEntityInterface
      *
      * @param string $message
      * @param string $routingKey
+     * @param array $properties
      * @return mixed|void
      * @throws AMQPProtocolChannelException
      */
-    public function publish(string $message, string $routingKey = '')
+    public function publish(string $message, string $routingKey = '', array $properties = [])
     {
         try {
             if ($this->attributes['auto_create'] === true) {
@@ -203,7 +214,13 @@ class ExchangeEntity implements PublisherInterface, AMQPEntityInterface
                 $this->bind();
             }
             $this->getChannel()->basic_publish(
-                new AMQPMessage($message),
+                new AMQPMessage(
+                    $message,
+                    EntityArgumentsInterpreter::interpretProperties(
+                        $this->attributes,
+                        $properties
+                    )
+                ),
                 $this->attributes['name'],
                 $routingKey,
                 true

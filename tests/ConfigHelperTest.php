@@ -146,7 +146,45 @@ class ConfigHelperTest extends TestCase
                         ]
                     ]
                 ]
-            ]
+            ],
+            // 5th scenario -- add attributes on queues
+            [
+                [
+                    'connections' => [
+                        'bar' => []
+                    ],
+                    'queues' => [
+                        'foo' => [
+                            'name' => 'foo.bar',
+                            'connection' => 'bar',
+                            'attributes' => [
+                                'bind'        => [
+                                    ['exchange' => 'foobar']
+                                ]
+                            ]
+                        ]
+                    ]
+                ],
+                [
+                    'connections' => [
+                        'bar' => []
+                    ],
+                    'queues' => [
+                        'foo' => [
+                            'name' => 'foo.bar',
+                            'connection' => 'bar',
+                            'attributes' => [
+                                'bind'        => [
+                                    ['exchange' => 'foobar']
+                                ]
+                            ]
+                        ]
+                    ],
+                    'exchanges' => [],
+                    'publishers' => [],
+                    'consumers' => []
+                ]
+            ],
         ];
     }
 }
