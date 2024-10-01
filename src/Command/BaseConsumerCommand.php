@@ -40,10 +40,6 @@ class BaseConsumerCommand extends Command
         return app()->make(ConsumerInterface::class, [$consumerAliasName]);
     }
 
-    /**
-     * Execute the console command.
-     * @return int
-     */
     public function handle()
     {
         $messageCount = $this->input->getOption('messages');
@@ -67,8 +63,7 @@ class BaseConsumerCommand extends Command
             return $consumer->startConsuming($messageCount, $waitTime, $memoryLimit);
         } catch (\Throwable $e) {
             $consumer->stopConsuming();
-            $this->output->error($e->getMessage());
-            return -1;
+            throw $e;
         }
     }
 
