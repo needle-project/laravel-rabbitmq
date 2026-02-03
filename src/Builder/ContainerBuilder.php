@@ -56,6 +56,9 @@ class ContainerBuilder
             $globalPrefetch   = array_key_exists('global_prefetch', $consumerDetails)
                 ? $consumerDetails['global_prefetch']
                 : true;
+            $retryTimeout     = array_key_exists('retry_timeout', $consumerDetails)
+                ? (float)$consumerDetails['retry_timeout']
+                : 0.001; // Default: 0.001 seconds (1ms)
             $messageProcessor = $consumerDetails['message_processor'];
 
             if ($queues->has($consumerDetails['queue'])) {
@@ -73,6 +76,7 @@ class ContainerBuilder
 
             $entity->setPrefetchCount($prefetchCount);
             $entity->setGlobalPrefetch($globalPrefetch);
+            $entity->setRetryTimeout($retryTimeout);
             $entity->setMessageProcessor($messageProcessor);
             $container->addConsumer($consumerAliasName, $entity);
         }
